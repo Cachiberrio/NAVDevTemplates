@@ -1,0 +1,403 @@
+OBJECT Table 52100 <TableName>
+{
+  OBJECT-PROPERTIES
+  {
+    Date=07/10/20;
+    Time=[ 8:55:39];
+    Modified=Yes;
+    Version List=MAEES8.00.00;
+  }
+  PROPERTIES
+  {
+    OnInsert=BEGIN
+               TableNameSetup.GET;
+               IF "No." = '' THEN BEGIN
+                 TableNameSetup.TESTFIELD("<TableName> No. Series");
+                 NoSeriesMgt.InitSeries(TableNameSetup."<TableName> No. Series",xRec."No. series",Date,"No.","No. series");
+                 Date := TODAY;
+               END;
+               "Create by UserID" := USERID;
+             END;
+
+    OnDelete=VAR
+               TableNameCommentLine@1170170000 : Record 52102;
+             BEGIN
+               TableNameCommentLine.RESET;
+               TableNameCommentLine.SETRANGE("Table Name",TableNameCommentLine."Table Name"::TableName);
+               TableNameCommentLine.SETRANGE("<TableName> No.","No.");
+               TableNameCommentLine.DELETEALL(FALSE);
+             END;
+
+    CaptionML=[ENU=<TableName>;
+               ESP=<NombreTabla>];
+    LookupPageID=Page52101;
+    DrillDownPageID=Page52101;
+  }
+  FIELDS
+  {
+    { 1   ;   ;No.                 ;Code20        ;CaptionML=[ENU=No.;
+                                                              ESP=No.] }
+    { 2   ;   ;Name                ;Text50        ;CaptionML=[ENU=Name;
+                                                              ESP=Descripci¢n] }
+    { 4   ;   ;Create by UserID    ;Code20        ;TableRelation=User;
+                                                   ValidateTableRelation=No;
+                                                   TestTableRelation=No;
+                                                   CaptionML=[ENU=Create by UserID;
+                                                              ESP=Creado por Id. usuario] }
+    { 6   ;   ;Date                ;Date          ;CaptionML=[ENU=Date;
+                                                              ESP=Fecha] }
+    { 7   ;   ;Comment             ;Boolean       ;FieldClass=FlowField;
+                                                   CalcFormula=Exist("<TableName> Comment Line" WHERE (Table Name=CONST(TableName),
+                                                                                                       <TableName> No.=FIELD(No.)));
+                                                   CaptionML=[ENU=Comment;
+                                                              ESP=Comment] }
+    { 8   ;   ;No. series          ;Code10        ;TableRelation="No. Series";
+                                                   CaptionML=[ENU=No. series;
+                                                              ESP=No. serie] }
+  }
+  KEYS
+  {
+    {    ;No.                                     ;Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+    { 1   ;DropDown            ;No.,Name                                 }
+  }
+  CODE
+  {
+    VAR
+      TableNameSetup@1170170000 : Record 52101;
+      NoSeriesMgt@1170170001 : Codeunit 396;
+
+    PROCEDURE AssistEdit@2(AntParte@1000 : Record 52100) : Boolean;
+    BEGIN
+      TableNameSetup.GET;
+      TableNameSetup.TESTFIELD("<TableName> No. Series");
+      IF NoSeriesMgt.SelectSeries(TableNameSetup."<TableName> No. Series",AntParte."No. series","No. series") THEN BEGIN
+        TableNameSetup.GET;
+        TableNameSetup.TESTFIELD("<TableName> No. Series");
+        NoSeriesMgt.SetSeries("No.");
+        EXIT(TRUE);
+      END;
+    END;
+
+    BEGIN
+    END.
+  }
+}
+
+OBJECT Table 52101 <TableName> Setup
+{
+  OBJECT-PROPERTIES
+  {
+    Date=07/10/20;
+    Time=[ 9:09:25];
+    Modified=Yes;
+    Version List=MAEES8.00.00;
+  }
+  PROPERTIES
+  {
+    CaptionML=[ENU=<TableName> Setup;
+               ESP=Configuraci¢n <NombreTabla>];
+  }
+  FIELDS
+  {
+    { 1   ;   ;Primary Key         ;Code10        ;CaptionML=[ENU=Primary Key;
+                                                              ESP=Clave primaria] }
+    { 2   ;   ;<TableName> No. Series;Code10      ;TableRelation="No. Series";
+                                                   CaptionML=[ENU=<TableName> No. Series;
+                                                              ESP=No. serie <NombreTabla>] }
+  }
+  KEYS
+  {
+    {    ;Primary Key                             ;Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+
+OBJECT Table 52102 <TableName> Comment Line
+{
+  OBJECT-PROPERTIES
+  {
+    Date=07/10/20;
+    Time=[ 9:01:18];
+    Modified=Yes;
+    Version List=MAEES8.00.00;
+  }
+  PROPERTIES
+  {
+    CaptionML=[ENU=<TableName> Comment Line;
+               ESP=L¡n. comentario <NombreTabla>];
+  }
+  FIELDS
+  {
+    { 1   ;   ;Table Name          ;Option        ;CaptionML=[ENU=Table Name;
+                                                              ESP=Nombre tabla];
+                                                   OptionCaptionML=[ENU=TableName;
+                                                                    ESP=NombreTabla];
+                                                   OptionString=TableName }
+    { 2   ;   ;<TableName> No.     ;Code10        ;CaptionML=[ENU=<TableName> No.;
+                                                              ESP=No. <NombreTabla>] }
+    { 4   ;   ;Code                ;Code10        ;CaptionML=[ENU=Code;
+                                                              ESP=C¢digo] }
+    { 5   ;   ;Line No.            ;Integer       ;CaptionML=[ENU=Line No.;
+                                                              ESP=No. l¡nea] }
+    { 6   ;   ;Date                ;Date          ;CaptionML=[ENU=Date;
+                                                              ESP=Fecha] }
+    { 7   ;   ;Comment             ;Text80        ;CaptionML=[ENU=Comment;
+                                                              ESP=Comentario] }
+  }
+  KEYS
+  {
+    {    ;Table Name,<TableName> No.,Code,Line No.;Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    PROCEDURE SetupNewLine@1();
+    VAR
+      TableNameCommentLine@1000 : Record 52102;
+    BEGIN
+      TableNameCommentLine.SETRANGE("Table Name","Table Name");
+      TableNameCommentLine.SETRANGE("<TableName> No.","<TableName> No.");
+      TableNameCommentLine.SETRANGE(Date,WORKDATE);
+      IF NOT TableNameCommentLine.FINDFIRST THEN
+        Date := WORKDATE;
+    END;
+
+    BEGIN
+    END.
+  }
+}
+
+OBJECT Page 52100 <TableName> Card
+{
+  OBJECT-PROPERTIES
+  {
+    Date=07/10/20;
+    Time=[ 8:56:16];
+    Modified=Yes;
+    Version List=MAEES8.00.00;
+  }
+  PROPERTIES
+  {
+    CaptionML=[ENU=<TableName> Card;
+               ESP=Ficha <NombreTabla>];
+    SourceTable=Table52100;
+    PageType=Document;
+    ActionList=ACTIONS
+    {
+      { 1170170006;  ;ActionContainer;
+                      ActionContainerType=RelatedInformation }
+      { 1170170008;1 ;Action    ;
+                      CaptionML=[ENU=Comments;
+                                 ESP=Comentarios];
+                      RunObject=Page 52103;
+                      RunPageLink=Table Name=CONST(TableName),
+                                  <TableName> No.=FIELD(No.);
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      Image=ViewComments;
+                      PromotedCategory=Process }
+    }
+  }
+  CONTROLS
+  {
+    { 1170170000;0;Container;
+                ContainerType=ContentArea }
+
+    { 1170170001;1;Group  ;
+                Name=General;
+                GroupType=Group }
+
+    { 1170170002;2;Field  ;
+                SourceExpr="No.";
+                OnAssistEdit=BEGIN
+                               AssistEdit(Rec);
+                             END;
+                              }
+
+    { 1170170003;2;Field  ;
+                SourceExpr=Name }
+
+    { 1170170004;2;Field  ;
+                SourceExpr="Create by UserID" }
+
+    { 1170170005;2;Field  ;
+                SourceExpr=Date }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+
+OBJECT Page 52101 <TableName> List
+{
+  OBJECT-PROPERTIES
+  {
+    Date=07/10/20;
+    Time=[ 9:02:21];
+    Modified=Yes;
+    Version List=MAEES8.00.00;
+  }
+  PROPERTIES
+  {
+    Editable=No;
+    CaptionML=[ENU=<TableName> List;
+               ESP=Lista <NombreTablaPlural>];
+    SourceTable=Table52100;
+    PageType=List;
+    CardPageID=<TableName> Card;
+    ActionList=ACTIONS
+    {
+      { 1170170007;  ;ActionContainer;
+                      ActionContainerType=RelatedInformation }
+      { 1170170006;1 ;Action    ;
+                      CaptionML=[ENU=Comments;
+                                 ESP=Comentarios];
+                      RunObject=Page 52103;
+                      RunPageLink=Table Name=CONST(TableName),
+                                  <TableName> No.=FIELD(No.);
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      Image=ViewComments;
+                      PromotedCategory=Process }
+    }
+  }
+  CONTROLS
+  {
+    { 1170170000;0;Container;
+                ContainerType=ContentArea }
+
+    { 1170170001;1;Group  ;
+                Name=Group;
+                GroupType=Repeater }
+
+    { 1170170002;2;Field  ;
+                SourceExpr="No." }
+
+    { 1170170003;2;Field  ;
+                SourceExpr=Name }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+
+OBJECT Page 52102 <TableName> Setup
+{
+  OBJECT-PROPERTIES
+  {
+    Date=07/10/20;
+    Time=[ 8:57:53];
+    Modified=Yes;
+    Version List=MAEES8.00.00;
+  }
+  PROPERTIES
+  {
+    CaptionML=[ENU=<TableName> Setup;
+               ESP=Configuraci¢n <NombreTabla>];
+    SourceTable=Table52101;
+    PageType=Card;
+    OnOpenPage=BEGIN
+                 RESET;
+                 IF NOT GET THEN BEGIN
+                   INIT;
+                   INSERT;
+                 END;
+               END;
+
+  }
+  CONTROLS
+  {
+    { 1170170000;0;Container;
+                ContainerType=ContentArea }
+
+    { 1170170001;1;Group  ;
+                Name=General;
+                GroupType=Group }
+
+    { 1170170002;2;Field  ;
+                SourceExpr="<TableName> No. Series" }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+
+OBJECT Page 52103 <TableName> Comment Sheet
+{
+  OBJECT-PROPERTIES
+  {
+    Date=07/10/20;
+    Time=[ 8:58:46];
+    Modified=Yes;
+    Version List=MAEES8.00.00;
+  }
+  PROPERTIES
+  {
+    CaptionML=[ENU=<TableName> Comment Sheet;
+               ESP=Hoja comentarios <NombreTabla>];
+    MultipleNewLines=Yes;
+    LinksAllowed=No;
+    SourceTable=Table52102;
+    DelayedInsert=Yes;
+    DataCaptionFields=Table Name,<TableName> No.;
+    PageType=List;
+    AutoSplitKey=Yes;
+    OnNewRecord=BEGIN
+                  SetupNewLine;
+                END;
+
+  }
+  CONTROLS
+  {
+    { 1170170000;0;Container;
+                ContainerType=ContentArea }
+
+    { 1170170001;1;Group  ;
+                Name=Group;
+                GroupType=Repeater }
+
+    { 1170170002;2;Field  ;
+                SourceExpr=Code;
+                Visible=FALSE }
+
+    { 1170170003;2;Field  ;
+                SourceExpr=Date }
+
+    { 1170170004;2;Field  ;
+                SourceExpr=Comment }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

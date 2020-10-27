@@ -1,0 +1,27 @@
+RLT Cadenas a sustituir
+============================
+<TableName>
+<PluralTableName>
+<NombreTabla>
+<NombreTablaPlural>
+PluralTableName
+TableName
+
+Sustitución de caracteres extraños
+======================================
+"á"= " "
+"é" = "‚"
+"í" = "¡"
+"ó" = "¢"
+'ú" = "£"
+
+µÖàé
+
+"Á" = "µ"
+"É" = ""
+"Í" = "Ö"
+"Ó" = "à"
+"Ú" = "é"
+
+"ñ" = "¤"
+"Ñ" = "¥"

@@ -1,0 +1,81 @@
+OBJECT Table 7014455 <TableName>
+{
+  OBJECT-PROPERTIES
+  {
+    Date=30/09/20;
+    Time=16:24:31;
+    Modified=Yes;
+    Version List=COD140;
+  }
+  PROPERTIES
+  {
+    CaptionML=[ENU=<TableName>;
+               ESP=<NombreTabla>];
+    LookupPageID=Page7014456;
+    DrillDownPageID=Page7014456;
+  }
+  FIELDS
+  {
+    { 1   ;   ;Code                ;Code10        ;CaptionML=[ENU=Code;
+                                                              ESP=C¢digo];
+                                                   NotBlank=Yes }
+    { 2   ;   ;Description         ;Text50        ;CaptionML=[ENU=Description;
+                                                              ESP=Descripci¢n] }
+  }
+  KEYS
+  {
+    {    ;Code                                    ;Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+    { 1   ;DropDown            ;Code,Description                         }
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+
+OBJECT Page 7014456 <TableName> List
+{
+  OBJECT-PROPERTIES
+  {
+    Date=30/09/20;
+    Time=16:25:31;
+    Modified=Yes;
+    Version List=COD140;
+  }
+  PROPERTIES
+  {
+    Editable=Yes;
+    CaptionML=[ENU=<TableName> List;
+               ESP=Lista <NombreTablaPlural>];
+    SourceTable=Table7014455;
+    PageType=List;
+  }
+  CONTROLS
+  {
+    { 1170170000;0;Container;
+                ContainerType=ContentArea }
+
+    { 1170170001;1;Group  ;
+                Name=Group;
+                GroupType=Repeater }
+
+    { 1170170002;2;Field  ;
+                SourceExpr=Code }
+
+    { 1170170003;2;Field  ;
+                SourceExpr=Description }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

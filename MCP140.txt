@@ -1,0 +1,1421 @@
+OBJECT Table 91850 <IntegrTable>
+{
+  OBJECT-PROPERTIES
+  {
+    Date=02/10/20;
+    Time=14:14:33;
+    Modified=Yes;
+    Version List=MCPES7.10.00;
+  }
+  PROPERTIES
+  {
+    OnInsert=BEGIN
+               IF "No." = '' THEN BEGIN
+                 IntegrTableIntegrationSetup.GET;
+                 IntegrTableIntegrationSetup.TESTFIELD("<IntegrTable> No. Series");
+                 NoSeriesMgt.InitSeries(IntegrTableIntegrationSetup."<IntegrTable> No. Series",xRec."No. series",0D,"No.","No. series");
+               END;
+             END;
+
+    OnModify=VAR
+               Cliente@1170170000 : Record 18;
+               Proveedor@1170170001 : Record 23;
+             BEGIN
+             END;
+
+    OnDelete=BEGIN
+               TESTFIELD("Customer No.",'');
+               TESTFIELD("Vendor No.",'');
+             END;
+
+    LookupPageID=Page91850;
+    DrillDownPageID=Page91850;
+  }
+  FIELDS
+  {
+    { 1   ;   ;No.                 ;Code20        ;OnValidate=BEGIN
+                                                                IF "No." <> xRec."No." THEN BEGIN
+                                                                  IntegrTableIntegrationSetup.GET;
+                                                                  NoSeriesMgt.TestManual(IntegrTableIntegrationSetup."<IntegrTable> No. Series");
+                                                                  "No. series" := '';
+                                                                END;
+                                                              END;
+
+                                                   CaptionML=[ENU=No.;
+                                                              ESP=No.] }
+    { 2   ;   ;Name                ;Text50        ;CaptionML=[ENU=Name;
+                                                              ESP=Nombre] }
+    { 3   ;   ;Name 2              ;Text50        ;CaptionML=[ENU=Name 2;
+                                                              ESP=Nombre 2] }
+    { 4   ;   ;Address             ;Text50        ;CaptionML=[ENU=Address;
+                                                              ESP=Direcci¢n] }
+    { 5   ;   ;Address 2           ;Text50        ;CaptionML=[ENU=Address 2;
+                                                              ESP=Direcci¢n 2] }
+    { 6   ;   ;City                ;Text30        ;OnValidate=BEGIN
+                                                                PostCode.ValidateCity(City,"Post Code",County,"Country/Region Code",(CurrFieldNo <> 0) AND GUIALLOWED);
+                                                              END;
+
+                                                   CaptionML=[ENU=City;
+                                                              ESP=Poblaci¢n] }
+    { 7   ;   ;Phone No.           ;Text30        ;ExtendedDatatype=Phone No.;
+                                                   CaptionML=[ENU=Phone No.;
+                                                              ESP=N§ tel‚fono] }
+    { 8   ;   ;VAT Registration No.;Text20        ;OnValidate=VAR
+                                                                VATRegNoFormat@1000 : Record 381;
+                                                              BEGIN
+                                                                VATRegNoFormat.Test("VAT Registration No.",'',"No.",DATABASE::"<IntegrTable>");
+                                                              END;
+
+                                                   CaptionML=[ENU=VAT Registration No.;
+                                                              ESP=CIF/NIF] }
+    { 9   ;   ;Post Code           ;Code20        ;TableRelation="Post Code";
+                                                   OnValidate=BEGIN
+                                                                PostCode.ValidatePostCode(City,"Post Code",County,"Country/Region Code",(CurrFieldNo <> 0) AND GUIALLOWED);
+                                                              END;
+
+                                                   ValidateTableRelation=No;
+                                                   TestTableRelation=No;
+                                                   CaptionML=[ENU=Post Code;
+                                                              ESP=C.P.] }
+    { 10  ;   ;County              ;Text30        ;CaptionML=[ENU=County;
+                                                              ESP=Provincia] }
+    { 11  ;   ;Customer No.        ;Code20        ;TableRelation=Customer;
+                                                   OnValidate=BEGIN
+                                                                IF xRec."Customer No." <> '' THEN
+                                                                  IF NOT CONFIRM(ConfirmCustomerChange) THEN
+                                                                    ERROR(ErrorCancelledTransaction);
+                                                              END;
+
+                                                   CaptionML=[ENU=Customer No.;
+                                                              ESP=No. cliente] }
+    { 12  ;   ;Entry Date          ;Date          ;CaptionML=[ENU=Entry Date;
+                                                              ESP=Fecha alta] }
+    { 13  ;   ;Leaving Date        ;Date          ;CaptionML=[ENU=Leaving Date;
+                                                              ESP=Fecha baja] }
+    { 14  ;   ;Date Filter         ;Date          ;FieldClass=FlowFilter;
+                                                   CaptionML=[ENU=Date Filter;
+                                                              ESP=Filtro Fecha] }
+    { 15  ;   ;No. series          ;Code10        ;TableRelation="No. Series";
+                                                   CaptionML=[ENU=No. series;
+                                                              ESP=No. serie];
+                                                   Editable=No }
+    { 18  ;   ;Country/Region Code ;Code10        ;TableRelation=Country/Region;
+                                                   CaptionML=[ENU=Country/Region Code;
+                                                              ESP=C¢d. pa¡s/regi¢n] }
+    { 19  ;   ;Vendor No.          ;Code20        ;TableRelation=Customer;
+                                                   OnValidate=BEGIN
+                                                                IF xRec."Vendor No." <> '' THEN
+                                                                  IF NOT CONFIRM(ConfirmVendorChange) THEN
+                                                                    ERROR(ErrorCancelledTransaction);
+                                                              END;
+
+                                                   CaptionML=[ENU=Vendor No.;
+                                                              ESP=No. proveedor] }
+  }
+  KEYS
+  {
+    {    ;No.                                     ;Clustered=Yes }
+    {    ;Entry Date                               }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+    VAR
+      PostCode@1170170000 : Record 225;
+      IntegrTableIntegrationSetup@1170170003 : Record 91851;
+      NoSeriesMgt@1170170002 : Codeunit 396;
+      IntegrTableIntegrationMgt@1170170001 : Codeunit 91850;
+      ConfirmCustomerChange@1170170010 : TextConst 'ENU=Do you really want to change related customer no.?;ESP=¨Desea cambiar el n£mero de cliente relacionado?';
+      ConfirmVendorChange@1170170004 : TextConst 'ENU=Do you really want to change related vendor no.?;ESP=¨Desea cambiar el n£mero de proveedor relacionado?';
+      ErrorCancelledTransaction@1170170008 : TextConst 'ENU=Transaction was cancelled.;ESP=Acci¢n cancelada.';
+      PhoneNoCannotContainLettersErr@1170170005 : TextConst 'ENU=must not contain letters;ESP=no debe contener letras';
+
+    PROCEDURE AssistEdit@2(OldIntegrTable@1000 : Record 91850) : Boolean;
+    VAR
+      IntegrTable@1001 : Record 91850;
+    BEGIN
+      WITH IntegrTable DO BEGIN
+        IntegrTable := Rec;
+        IntegrTableIntegrationSetup.GET;
+        IntegrTableIntegrationSetup.TESTFIELD("<IntegrTable> No. Series");
+        IF NoSeriesMgt.SelectSeries(IntegrTableIntegrationSetup."<IntegrTable> No. Series",OldIntegrTable."No. series","No. series") THEN BEGIN
+          NoSeriesMgt.SetSeries("No.");
+          Rec := IntegrTable;
+          EXIT(TRUE);
+        END;
+      END;
+    END;
+
+    PROCEDURE CreateCustomer@1170170000();
+    VAR
+      Clie@1170170000 : Record 18;
+      PlantClie@1170170001 : Record 5105;
+    BEGIN
+      IntegrTableIntegrationMgt.CreateCustomerIntegrTable(Rec);
+    END;
+
+    PROCEDURE CreateVendor@1170170006();
+    VAR
+      Proveedor@1170170000 : Record 23;
+    BEGIN
+      IntegrTableIntegrationMgt.CreateVendorIntegrTable(Rec);
+    END;
+
+    BEGIN
+    END.
+  }
+}
+
+OBJECT Table 91851 <IntegrTable> Integrat. Setup
+{
+  OBJECT-PROPERTIES
+  {
+    Date=02/10/20;
+    Time=10:29:44;
+    Modified=Yes;
+    Version List=MCPES7.10.00;
+  }
+  PROPERTIES
+  {
+  }
+  FIELDS
+  {
+    { 1   ;   ;Primary Key         ;Code10        ;CaptionML=ENU=Primary Key }
+    { 2   ;   ;<IntegrTable> No. Series;Code10    ;TableRelation="No. Series";
+                                                   CaptionML=ENU=<IntegrTable> No. Series }
+  }
+  KEYS
+  {
+    {    ;Primary Key                             ;Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+
+OBJECT Codeunit 91850 <IntegrTable> Integration Mgt.
+{
+  OBJECT-PROPERTIES
+  {
+    Date=02/10/20;
+    Time=13:39:41;
+    Modified=Yes;
+    Version List=MCPES7.10.00,Test;
+  }
+  PROPERTIES
+  {
+    OnRun=BEGIN
+          END;
+
+  }
+  CODE
+  {
+    VAR
+      MsgCreation@1170170000 : TextConst 'ENU=%1 %2 was created correctly.;ESP=El %1 % se cre¢ correctamente.';
+
+    LOCAL PROCEDURE FindIntegrTablePerCustomerNo@1170170007(CustomerNo@1170170000 : Code[20];VAR IntegrTable@1170170001 : Record 91850);
+    BEGIN
+      WITH IntegrTable DO BEGIN
+        RESET;
+        SETCURRENTKEY("Customer No.");
+        SETRANGE("Customer No.",CustomerNo);
+        IF NOT FINDSET THEN
+          INIT;
+      END;
+    END;
+
+    LOCAL PROCEDURE FindIntegrTablePerVendorNo@1170170011(VendorNo@1170170000 : Code[20];VAR IntegrTable@1170170001 : Record 91850);
+    BEGIN
+      WITH IntegrTable DO BEGIN
+        RESET;
+        SETCURRENTKEY("Vendor No.");
+        SETRANGE("Vendor No.",VendorNo);
+        IF NOT FINDSET THEN
+          INIT;
+      END;
+    END;
+
+    PROCEDURE CreateCustomerIntegrTable@1170170003(VAR IntegrTable@1170170002 : Record 91850);
+    VAR
+      Customer@1170170000 : Record 18;
+    BEGIN
+      WITH IntegrTable DO BEGIN
+        TESTFIELD("No.");
+        TESTFIELD("Customer No.",'');
+        CopyToCustomer(IntegrTable,Customer);
+        CopyCustomerTemplateFields(IntegrTable,Customer);
+        Customer.INSERT(TRUE);
+        "Customer No." :=  Customer."No.";
+        MODIFY;
+        MESSAGE(MsgCreation,Customer.TABLECAPTION,Customer."No.");
+      END;
+    END;
+
+    PROCEDURE CopyCustomerTemplateFields@1170170009(VAR IntegrTable@1170170000 : Record 91850;VAR Customer@1170170001 : Record 18);
+    VAR
+      ConfigTemplateMgt@1170170003 : Codeunit 8612;
+      RecRef@1170170002 : RecordRef;
+    BEGIN
+      WITH IntegrTable DO BEGIN
+        RecRef.GETTABLE(Customer);
+        ConfigTemplateMgt.UpdateFromTemplateSelection(RecRef);
+      END;
+    END;
+
+    PROCEDURE CopyToCustomer@1170170004(VAR IntegrTable@1170170001 : Record 91850;VAR Customer@1170170000 : Record 18);
+    BEGIN
+      WITH IntegrTable DO BEGIN
+        Customer.VALIDATE(Name,Name);
+        Customer."Name 2" := "Name 2";
+        Customer.Address := Address;
+        Customer."Address 2" := "Address 2";
+        Customer.City := City;
+        Customer."Phone No." := "Phone No.";
+        Customer."VAT Registration No." := "VAT Registration No.";
+        Customer."Post Code" := "Post Code";
+        Customer.County := County;
+        Customer."Country/Region Code" := "Country/Region Code";
+      END;
+    END;
+
+    PROCEDURE CopyToVendor@1170170005(VAR IntegrTable@1170170001 : Record 91850;VAR Vendor@1170170000 : Record 23);
+    BEGIN
+      WITH IntegrTable DO BEGIN
+        Vendor.VALIDATE(Name,Name);
+        Vendor."Name 2" := "Name 2";
+        Vendor.Address := Address;
+        Vendor."Address 2" := "Address 2";
+        Vendor.City := City;
+        Vendor."Phone No." := "Phone No.";
+        Vendor."VAT Registration No." := "VAT Registration No.";
+        Vendor."Post Code" := "Post Code";
+        Vendor.County := County;
+        Vendor."Country/Region Code" := "Country/Region Code";
+      END;
+    END;
+
+    PROCEDURE CopyVendorTemplateFields@1170170001(VAR IntegrTable@1170170000 : Record 91850;VAR RecProveedor@1170170001 : Record 23);
+    VAR
+      ConfigTemplateMgt@1170170003 : Codeunit 8612;
+      RecRef@1170170002 : RecordRef;
+    BEGIN
+      WITH IntegrTable DO BEGIN
+        RecRef.GETTABLE(RecProveedor);
+        ConfigTemplateMgt.UpdateFromTemplateSelection(RecRef);
+      END;
+    END;
+
+    PROCEDURE CreateVendorIntegrTable@1170170006(VAR IntegrTable@1170170001 : Record 91850);
+    VAR
+      Vendor@1170170000 : Record 23;
+    BEGIN
+      WITH IntegrTable DO BEGIN
+        TESTFIELD("No.");
+        TESTFIELD("Vendor No.",'');
+        CopyToVendor(IntegrTable,Vendor);
+        CopyVendorTemplateFields(IntegrTable,Vendor);
+        Vendor.INSERT(TRUE);
+        "Vendor No." := Vendor."No.";
+        MODIFY;
+        MESSAGE(MsgCreation,Vendor.TABLECAPTION,Vendor."No.");
+      END;
+    END;
+
+    [EventSubscriber(Table,91850,OnAfterModifyEvent)]
+    PROCEDURE UpdateCustomerFromIntegrTable@1170170002(VAR Rec@1170170001 : Record 91850;VAR xRec@1170170002 : Record 91850;RunTrigger@1170170003 : Boolean);
+    VAR
+      Customer@1170170000 : Record 18;
+    BEGIN
+      WITH Rec DO BEGIN
+        IF NOT RunTrigger THEN
+          EXIT;
+        IF NOT Customer.GET("Customer No.") THEN
+          EXIT;
+        CopyToCustomer(Rec,Customer);
+        Customer.MODIFY(FALSE);
+      END;
+    END;
+
+    [EventSubscriber(Table,91850,OnAfterModifyEvent)]
+    PROCEDURE UpdateVendorFromIntegrTable@1170170010(VAR Rec@1170170001 : Record 91850;VAR xRec@1170170002 : Record 91850;RunTrigger@1170170003 : Boolean);
+    VAR
+      Vendor@1170170000 : Record 23;
+    BEGIN
+      WITH Rec DO BEGIN
+        IF NOT Vendor.GET("Vendor No.") THEN
+          EXIT;
+        CopyToVendor(Rec,Vendor);
+        Vendor.MODIFY(FALSE);
+      END;
+    END;
+
+    [EventSubscriber(Table,18,OnAfterModifyEvent)]
+    LOCAL PROCEDURE UpdateIntegrTableFromCustomer@1170170000(VAR Rec@1170170000 : Record 18;VAR xRec@1170170001 : Record 18;RunTrigger@1170170002 : Boolean);
+    VAR
+      IntegrTable@1170170003 : Record 91850;
+      Vendor@1170170004 : Record 23;
+    BEGIN
+      WITH Rec DO BEGIN
+        IF NOT RunTrigger THEN
+          EXIT;
+        FindIntegrTablePerCustomerNo("No.",IntegrTable);
+        IF IntegrTable."No." = '' THEN
+          EXIT;
+        IntegrTable.Name := Name;
+        IntegrTable."Name 2" := "Name 2";
+        IntegrTable.Address := Address;
+        IntegrTable."Address 2" := "Address 2";
+        IntegrTable.City := City;
+        IntegrTable."Phone No." := "Phone No.";
+        IntegrTable."VAT Registration No." := "VAT Registration No.";
+        IntegrTable."Post Code" := "Post Code";
+        IntegrTable.County := County;
+        IntegrTable."Country/Region Code" := "Country/Region Code";
+        IntegrTable.MODIFY(FALSE);
+        IF Vendor.GET(IntegrTable."Vendor No.") THEN BEGIN
+          CopyToVendor(IntegrTable,Vendor);
+          Vendor.MODIFY;
+        END;
+      END;
+    END;
+
+    [EventSubscriber(Table,23,OnAfterModifyEvent)]
+    LOCAL PROCEDURE UpdateIntegrTableFromVendor@1170170008(VAR Rec@1170170000 : Record 23;VAR xRec@1170170001 : Record 23;RunTrigger@1170170002 : Boolean);
+    VAR
+      IntegrTable@1170170003 : Record 91850;
+      Customer@1170170004 : Record 18;
+    BEGIN
+      WITH Rec DO BEGIN
+        IF NOT RunTrigger THEN
+          EXIT;
+        FindIntegrTablePerVendorNo("No.",IntegrTable);
+        IF IntegrTable."No." = '' THEN
+          EXIT;
+        IntegrTable.Name := Name;
+        IntegrTable."Name 2" := "Name 2";
+        IntegrTable.Address := Address;
+        IntegrTable."Address 2" := "Address 2";
+        IntegrTable.City := City;
+        IntegrTable."Phone No." := "Phone No.";
+        IntegrTable."VAT Registration No." := "VAT Registration No.";
+        IntegrTable."Post Code" := "Post Code";
+        IntegrTable.County := County;
+        IntegrTable."Country/Region Code" := "Country/Region Code";
+        IntegrTable.MODIFY(FALSE);
+        IF Customer.GET(IntegrTable."Customer No.") THEN BEGIN
+          CopyToCustomer(IntegrTable,Customer);
+          Customer.MODIFY;
+        END;
+      END;
+    END;
+
+    BEGIN
+    END.
+  }
+}
+
+OBJECT Codeunit 91890 Library - <IntegrTable> Integ.
+{
+  OBJECT-PROPERTIES
+  {
+    Date=02/10/20;
+    Time=13:10:05;
+    Modified=Yes;
+    Version List=MCPES7.10.00,Test;
+  }
+  PROPERTIES
+  {
+    OnRun=BEGIN
+          END;
+
+  }
+  CODE
+  {
+    VAR
+      LibraryUtility@1170170000 : Codeunit 131000;
+      LibraryERM@1170170001 : Codeunit 131300;
+
+    PROCEDURE CreateIntegrTable@1170170000(VAR IntegrTable@1170170000 : Record 91850);
+    VAR
+      CountryRegion@1170170001 : Record 9;
+      IntegrTableIntegratSetup@1170170002 : Record 91851;
+    BEGIN
+      WITH IntegrTable DO BEGIN
+        IF NOT IntegrTableIntegratSetup.GET THEN
+          CreateIntegrTableIntegrationSetup(IntegrTableIntegratSetup);
+        INIT;
+        "No." := '';
+        INSERT(TRUE);
+        Name := LibraryUtility.GenerateRandomText(MAXSTRLEN(IntegrTable.Name));
+        "Name 2":= LibraryUtility.GenerateRandomText(MAXSTRLEN(IntegrTable."Name 2"));
+        Address := LibraryUtility.GenerateRandomText(MAXSTRLEN(IntegrTable.Address));
+        "Address 2" := LibraryUtility.GenerateRandomText(MAXSTRLEN(IntegrTable."Address 2"));
+        City := LibraryUtility.GenerateRandomText(MAXSTRLEN(IntegrTable.City));
+        "Phone No." := LibraryUtility.GenerateRandomNumericText(MAXSTRLEN(IntegrTable."Phone No."));
+        "VAT Registration No." := '23456789Y';
+        "Post Code" := LibraryUtility.GenerateRandomText(MAXSTRLEN(IntegrTable."Post Code"));
+        County := LibraryUtility.GenerateRandomText(MAXSTRLEN(IntegrTable.County));
+        "Entry Date" := WORKDATE;
+        "Leaving Date" := DMY2DATE(31,12,DATE2DMY(WORKDATE,3));
+        LibraryERM.CreateCountryRegion(CountryRegion);
+        "Country/Region Code" := CountryRegion.Code;
+        MODIFY;
+      END;
+    END;
+
+    LOCAL PROCEDURE CreateIntegrTableIntegrationSetup@1170170001(VAR IntegrTableIntegratSetup@1170170000 : Record 91851);
+    BEGIN
+      WITH  IntegrTableIntegratSetup DO BEGIN
+        RESET;
+        IF NOT GET THEN BEGIN
+          INIT;
+          INSERT;
+          "<IntegrTable> No. Series" := LibraryERM.CreateNoSeriesCode;
+          MODIFY;
+        END;
+      END;
+    END;
+
+    BEGIN
+    END.
+  }
+}
+
+OBJECT Codeunit 91891 Test <IntegrTable> Integration
+{
+  OBJECT-PROPERTIES
+  {
+    Date=02/10/20;
+    Time=14:13:15;
+    Modified=Yes;
+    Version List=MCPES7.10.00,Test;
+  }
+  PROPERTIES
+  {
+    Subtype=Test;
+    OnRun=BEGIN
+          END;
+
+  }
+  CODE
+  {
+    VAR
+      LibraryIntegrTableInteg@1170170000 : Codeunit 91890;
+      LibraryUtility@1170170001 : Codeunit 131000;
+      LibraryERM@1170170002 : Codeunit 131300;
+
+    [Test]
+    [HandlerFunctions(Modal8620PageHandler,MessageHandler)]
+    PROCEDURE CreateCustomerFromIntegrTable@1170170000();
+    VAR
+      CountryRegion@1170170014 : Record 9;
+      IntegrTable@1170170000 : Record 91850;
+      NewName@1170170001 : Text;
+      NewName2@1170170002 : Text;
+      NewAddress@1170170003 : Text;
+      NewAddress2@1170170004 : Text;
+      NewCity@1170170005 : Text;
+      NewPhoneNo@1170170006 : Text;
+      NewVATRegistrationNo@1170170007 : Text;
+      NewPostCode@1170170008 : Text;
+      NewCounty@1170170010 : Text;
+      NewEntryDate@1170170011 : Date;
+      NewLeavingDate@1170170012 : Date;
+      NewCountryRegionCode@1170170013 : Text;
+    BEGIN
+      // Given
+      LibraryIntegrTableInteg.CreateIntegrTable(IntegrTable);
+
+      // When
+      IntegrTable.CreateCustomer;
+
+      // Then
+      TestCustomerCard(IntegrTable);
+    END;
+
+    [Test]
+    [HandlerFunctions(Modal8620PageHandler,MessageHandler)]
+    PROCEDURE UpdateCustomerFromIntegrTable@1170170018();
+    VAR
+      CountryRegion@1170170014 : Record 9;
+      IntegrTable@1170170000 : Record 91850;
+      NewName@1170170001 : Text;
+      NewName2@1170170002 : Text;
+      NewAddress@1170170003 : Text;
+      NewAddress2@1170170004 : Text;
+      NewCity@1170170005 : Text;
+      NewPhoneNo@1170170006 : Text;
+      NewVATRegistrationNo@1170170007 : Text;
+      NewPostCode@1170170008 : Text;
+      NewCounty@1170170010 : Text;
+      NewEntryDate@1170170011 : Date;
+      NewLeavingDate@1170170012 : Date;
+      NewCountryRegionCode@1170170013 : Text;
+    BEGIN
+      // Given
+      NewName := LibraryUtility.GenerateRandomText(MAXSTRLEN(IntegrTable.Name));
+      NewName2 := LibraryUtility.GenerateRandomText(MAXSTRLEN(IntegrTable."Name 2"));
+      NewAddress := LibraryUtility.GenerateRandomText(MAXSTRLEN(IntegrTable.Address));
+      NewAddress2 := LibraryUtility.GenerateRandomText(MAXSTRLEN(IntegrTable."Address 2"));
+      NewCity := LibraryUtility.GenerateRandomText(MAXSTRLEN(IntegrTable.City));
+      NewPhoneNo := LibraryUtility.GenerateRandomNumericText(MAXSTRLEN(IntegrTable."Phone No."));
+      NewVATRegistrationNo := LibraryUtility.GenerateRandomText(8) + 'A';
+      NewVATRegistrationNo := '12345678Y';
+      NewPostCode := LibraryUtility.GenerateRandomText(MAXSTRLEN(IntegrTable."Post Code"));
+      NewCounty := LibraryUtility.GenerateRandomText(MAXSTRLEN(IntegrTable.County));
+      NewEntryDate := LibraryUtility.GenerateRandomDate(DMY2DATE(1,1,DATE2DMY(WORKDATE,3) - 2),DMY2DATE(31,12,DATE2DMY(WORKDATE,3) - 2));
+      NewLeavingDate := LibraryUtility.GenerateRandomDate(DMY2DATE(1,1,DATE2DMY(WORKDATE,3) - 1),DMY2DATE(31,12,DATE2DMY(WORKDATE,3) - 1));
+      LibraryERM.CreateCountryRegion(CountryRegion);
+      NewCountryRegionCode := CountryRegion.Code;
+      LibraryIntegrTableInteg.CreateIntegrTable(IntegrTable);
+      IntegrTable.CreateCustomer;
+
+      // When
+      IntegrTable.VALIDATE(Name,NewName);
+      IntegrTable.VALIDATE("Name 2",NewName2);
+      IntegrTable.VALIDATE(Address,NewAddress);
+      IntegrTable.VALIDATE("Address 2",NewAddress2);
+      IntegrTable.VALIDATE(City,NewCity);
+      IntegrTable.VALIDATE("Phone No.",NewPhoneNo);
+      IntegrTable.VALIDATE("VAT Registration No.",NewVATRegistrationNo);
+      IntegrTable.VALIDATE("Post Code",NewPostCode);
+      IntegrTable.VALIDATE(County,NewCounty);
+      IntegrTable.VALIDATE("Entry Date",NewEntryDate);
+      IntegrTable.VALIDATE("Leaving Date",NewLeavingDate);
+      IntegrTable.VALIDATE("Country/Region Code",NewCountryRegionCode);
+      IntegrTable.MODIFY(TRUE);
+
+      // Then
+      TestCustomerCard(IntegrTable);
+    END;
+
+    [Test]
+    [HandlerFunctions(Modal8620PageHandler,MessageHandler)]
+    PROCEDURE UpdateIntegrTableFromCustomer@1170170004();
+    VAR
+      Customer@1170170000 : Record 18;
+      CountryRegion@1170170015 : Record 9;
+      IntegrTable@1170170014 : Record 91850;
+      NewName@1170170013 : Text;
+      NewName2@1170170012 : Text;
+      NewAddress@1170170011 : Text;
+      NewAddress2@1170170010 : Text;
+      NewCity@1170170009 : Text;
+      NewPhoneNo@1170170008 : Text;
+      NewVATRegistrationNo@1170170007 : Text;
+      NewPostCode@1170170006 : Text;
+      NewCounty@1170170004 : Text;
+      NewEntryDate@1170170003 : Date;
+      NewLeavingDate@1170170002 : Date;
+      NewCountryRegionCode@1170170001 : Text;
+    BEGIN
+      // Given
+      NewName := LibraryUtility.GenerateRandomText(MAXSTRLEN(IntegrTable.Name));
+      NewName2 := LibraryUtility.GenerateRandomText(MAXSTRLEN(IntegrTable."Name 2"));
+      NewAddress := LibraryUtility.GenerateRandomText(MAXSTRLEN(IntegrTable.Address));
+      NewAddress2 := LibraryUtility.GenerateRandomText(MAXSTRLEN(IntegrTable."Address 2"));
+      NewCity := LibraryUtility.GenerateRandomText(MAXSTRLEN(IntegrTable.City));
+      NewPhoneNo := LibraryUtility.GenerateRandomNumericText(MAXSTRLEN(IntegrTable."Phone No."));
+      NewVATRegistrationNo := LibraryUtility.GenerateRandomText(8) + 'A';
+      NewVATRegistrationNo := '12345678Y';
+      NewPostCode := LibraryUtility.GenerateRandomText(MAXSTRLEN(IntegrTable."Post Code"));
+      NewCounty := LibraryUtility.GenerateRandomText(MAXSTRLEN(IntegrTable.County));
+      NewEntryDate := LibraryUtility.GenerateRandomDate(DMY2DATE(1,1,DATE2DMY(WORKDATE,3) - 2),DMY2DATE(31,12,DATE2DMY(WORKDATE,3) - 2));
+      NewLeavingDate := LibraryUtility.GenerateRandomDate(DMY2DATE(1,1,DATE2DMY(WORKDATE,3) - 1),DMY2DATE(31,12,DATE2DMY(WORKDATE,3) - 1));
+      LibraryERM.CreateCountryRegion(CountryRegion);
+      NewCountryRegionCode := CountryRegion.Code;
+      LibraryIntegrTableInteg.CreateIntegrTable(IntegrTable);
+      IntegrTable.CreateCustomer;
+
+      // When
+      IntegrTable.TESTFIELD("Customer No.");
+      Customer.GET(IntegrTable."Customer No.");
+      Customer.VALIDATE(Name,NewName);
+      Customer.VALIDATE("Name 2",NewName2);
+      Customer.VALIDATE(Address,NewAddress);
+      Customer.VALIDATE("Address 2",NewAddress2);
+      Customer.VALIDATE(City,NewCity);
+      Customer.VALIDATE("Phone No.",NewPhoneNo);
+      Customer.VALIDATE("VAT Registration No.",NewVATRegistrationNo);
+      Customer.VALIDATE("Post Code",NewPostCode);
+      Customer.VALIDATE(County,NewCounty);
+      Customer.VALIDATE("Country/Region Code",NewCountryRegionCode);
+      Customer.MODIFY(TRUE);
+
+      // Then
+      TestIntegrTableCardFromCustomer(IntegrTable."No.");
+    END;
+
+    [Test]
+    [HandlerFunctions(Modal8620PageHandler,MessageHandler)]
+    PROCEDURE CreateVendorFromIntegrTable@1170170007();
+    VAR
+      CountryRegion@1170170014 : Record 9;
+      IntegrTable@1170170000 : Record 91850;
+      NewName@1170170001 : Text;
+      NewName2@1170170002 : Text;
+      NewAddress@1170170003 : Text;
+      NewAddress2@1170170004 : Text;
+      NewCity@1170170005 : Text;
+      NewPhoneNo@1170170006 : Text;
+      NewVATRegistrationNo@1170170007 : Text;
+      NewPostCode@1170170008 : Text;
+      NewCounty@1170170010 : Text;
+      NewEntryDate@1170170011 : Date;
+      NewLeavingDate@1170170012 : Date;
+      NewCountryRegionCode@1170170013 : Text;
+    BEGIN
+      // Given
+      LibraryIntegrTableInteg.CreateIntegrTable(IntegrTable);
+
+      // When
+      IntegrTable.CreateVendor;
+
+      // Then
+      TestVendorCard(IntegrTable);
+    END;
+
+    [Test]
+    [HandlerFunctions(Modal8620PageHandler,MessageHandler)]
+    PROCEDURE UpdateVendorFromIntegrTable@1170170010();
+    VAR
+      CountryRegion@1170170014 : Record 9;
+      IntegrTable@1170170000 : Record 91850;
+      NewName@1170170001 : Text;
+      NewName2@1170170002 : Text;
+      NewAddress@1170170003 : Text;
+      NewAddress2@1170170004 : Text;
+      NewCity@1170170005 : Text;
+      NewPhoneNo@1170170006 : Text;
+      NewVATRegistrationNo@1170170007 : Text;
+      NewPostCode@1170170008 : Text;
+      NewCounty@1170170010 : Text;
+      NewEntryDate@1170170011 : Date;
+      NewLeavingDate@1170170012 : Date;
+      NewCountryRegionCode@1170170013 : Text;
+    BEGIN
+      // Given
+      NewName := LibraryUtility.GenerateRandomText(MAXSTRLEN(IntegrTable.Name));
+      NewName2 := LibraryUtility.GenerateRandomText(MAXSTRLEN(IntegrTable."Name 2"));
+      NewAddress := LibraryUtility.GenerateRandomText(MAXSTRLEN(IntegrTable.Address));
+      NewAddress2 := LibraryUtility.GenerateRandomText(MAXSTRLEN(IntegrTable."Address 2"));
+      NewCity := LibraryUtility.GenerateRandomText(MAXSTRLEN(IntegrTable.City));
+      NewPhoneNo := LibraryUtility.GenerateRandomNumericText(MAXSTRLEN(IntegrTable."Phone No."));
+      NewVATRegistrationNo := LibraryUtility.GenerateRandomText(8) + 'A';
+      NewVATRegistrationNo := '12345678Y';
+      NewPostCode := LibraryUtility.GenerateRandomText(MAXSTRLEN(IntegrTable."Post Code"));
+      NewCounty := LibraryUtility.GenerateRandomText(MAXSTRLEN(IntegrTable.County));
+      NewEntryDate := LibraryUtility.GenerateRandomDate(DMY2DATE(1,1,DATE2DMY(WORKDATE,3) - 2),DMY2DATE(31,12,DATE2DMY(WORKDATE,3) - 2));
+      NewLeavingDate := LibraryUtility.GenerateRandomDate(DMY2DATE(1,1,DATE2DMY(WORKDATE,3) - 1),DMY2DATE(31,12,DATE2DMY(WORKDATE,3) - 1));
+      LibraryERM.CreateCountryRegion(CountryRegion);
+      NewCountryRegionCode := CountryRegion.Code;
+      LibraryIntegrTableInteg.CreateIntegrTable(IntegrTable);
+      IntegrTable.CreateVendor;
+
+      // When
+      IntegrTable.VALIDATE(Name,NewName);
+      IntegrTable.VALIDATE("Name 2",NewName2);
+      IntegrTable.VALIDATE(Address,NewAddress);
+      IntegrTable.VALIDATE("Address 2",NewAddress2);
+      IntegrTable.VALIDATE(City,NewCity);
+      IntegrTable.VALIDATE("Phone No.",NewPhoneNo);
+      IntegrTable.VALIDATE("VAT Registration No.",NewVATRegistrationNo);
+      IntegrTable.VALIDATE("Post Code",NewPostCode);
+      IntegrTable.VALIDATE(County,NewCounty);
+      IntegrTable.VALIDATE("Entry Date",NewEntryDate);
+      IntegrTable.VALIDATE("Leaving Date",NewLeavingDate);
+      IntegrTable.VALIDATE("Country/Region Code",NewCountryRegionCode);
+      IntegrTable.MODIFY(TRUE);
+
+      // Then
+      TestVendorCard(IntegrTable);
+    END;
+
+    [Test]
+    [HandlerFunctions(Modal8620PageHandler,MessageHandler)]
+    PROCEDURE UpdateIntegrTableFromVendor@1170170014();
+    VAR
+      Vendor@1170170000 : Record 23;
+      CountryRegion@1170170015 : Record 9;
+      IntegrTable@1170170014 : Record 91850;
+      NewName@1170170013 : Text;
+      NewName2@1170170012 : Text;
+      NewAddress@1170170011 : Text;
+      NewAddress2@1170170010 : Text;
+      NewCity@1170170009 : Text;
+      NewPhoneNo@1170170008 : Text;
+      NewVATRegistrationNo@1170170007 : Text;
+      NewPostCode@1170170006 : Text;
+      NewCounty@1170170004 : Text;
+      NewEntryDate@1170170003 : Date;
+      NewLeavingDate@1170170002 : Date;
+      NewCountryRegionCode@1170170001 : Text;
+    BEGIN
+      // Given
+      NewName := LibraryUtility.GenerateRandomText(MAXSTRLEN(IntegrTable.Name));
+      NewName2 := LibraryUtility.GenerateRandomText(MAXSTRLEN(IntegrTable."Name 2"));
+      NewAddress := LibraryUtility.GenerateRandomText(MAXSTRLEN(IntegrTable.Address));
+      NewAddress2 := LibraryUtility.GenerateRandomText(MAXSTRLEN(IntegrTable."Address 2"));
+      NewCity := LibraryUtility.GenerateRandomText(MAXSTRLEN(IntegrTable.City));
+      NewPhoneNo := LibraryUtility.GenerateRandomNumericText(MAXSTRLEN(IntegrTable."Phone No."));
+      NewVATRegistrationNo := LibraryUtility.GenerateRandomText(8) + 'A';
+      NewVATRegistrationNo := '12345678Y';
+      NewPostCode := LibraryUtility.GenerateRandomText(MAXSTRLEN(IntegrTable."Post Code"));
+      NewCounty := LibraryUtility.GenerateRandomText(MAXSTRLEN(IntegrTable.County));
+      NewEntryDate := LibraryUtility.GenerateRandomDate(DMY2DATE(1,1,DATE2DMY(WORKDATE,3) - 2),DMY2DATE(31,12,DATE2DMY(WORKDATE,3) - 2));
+      NewLeavingDate := LibraryUtility.GenerateRandomDate(DMY2DATE(1,1,DATE2DMY(WORKDATE,3) - 1),DMY2DATE(31,12,DATE2DMY(WORKDATE,3) - 1));
+      LibraryERM.CreateCountryRegion(CountryRegion);
+      NewCountryRegionCode := CountryRegion.Code;
+      LibraryIntegrTableInteg.CreateIntegrTable(IntegrTable);
+      IntegrTable.CreateVendor;
+
+      // When
+      IntegrTable.TESTFIELD("Vendor No.");
+      Vendor.GET(IntegrTable."Vendor No.");
+      Vendor.VALIDATE(Name,NewName);
+      Vendor.VALIDATE("Name 2",NewName2);
+      Vendor.VALIDATE(Address,NewAddress);
+      Vendor.VALIDATE("Address 2",NewAddress2);
+      Vendor.VALIDATE(City,NewCity);
+      Vendor.VALIDATE("Phone No.",NewPhoneNo);
+      Vendor.VALIDATE("VAT Registration No.",NewVATRegistrationNo);
+      Vendor.VALIDATE("Post Code",NewPostCode);
+      Vendor.VALIDATE(County,NewCounty);
+      Vendor.VALIDATE("Country/Region Code",NewCountryRegionCode);
+      Vendor.MODIFY(TRUE);
+
+      // Then
+      TestIntegrTableCardFromVendor(IntegrTable."No.");
+    END;
+
+    [Test]
+    [HandlerFunctions(Modal8620PageHandler,MessageHandler)]
+    PROCEDURE CreateCustomerAndVendorFromIntegrTable@1170170001();
+    VAR
+      CountryRegion@1170170014 : Record 9;
+      IntegrTable@1170170000 : Record 91850;
+      NewName@1170170001 : Text;
+      NewName2@1170170002 : Text;
+      NewAddress@1170170003 : Text;
+      NewAddress2@1170170004 : Text;
+      NewCity@1170170005 : Text;
+      NewPhoneNo@1170170006 : Text;
+      NewVATRegistrationNo@1170170007 : Text;
+      NewPostCode@1170170008 : Text;
+      NewCounty@1170170010 : Text;
+      NewEntryDate@1170170011 : Date;
+      NewLeavingDate@1170170012 : Date;
+      NewCountryRegionCode@1170170013 : Text;
+    BEGIN
+      // Given
+      LibraryIntegrTableInteg.CreateIntegrTable(IntegrTable);
+
+      // When
+      IntegrTable.CreateCustomer;
+      IntegrTable.CreateVendor;
+
+      // Then
+      TestCustomerCard(IntegrTable);
+      TestVendorCard(IntegrTable);
+    END;
+
+    [Test]
+    [HandlerFunctions(Modal8620PageHandler,MessageHandler)]
+    PROCEDURE UpdateIntegrTableAndVendorFromCustomer@1170170005();
+    VAR
+      Customer@1170170000 : Record 18;
+      CountryRegion@1170170015 : Record 9;
+      IntegrTable@1170170014 : Record 91850;
+      NewName@1170170013 : Text;
+      NewName2@1170170012 : Text;
+      NewAddress@1170170011 : Text;
+      NewAddress2@1170170010 : Text;
+      NewCity@1170170009 : Text;
+      NewPhoneNo@1170170008 : Text;
+      NewVATRegistrationNo@1170170007 : Text;
+      NewPostCode@1170170006 : Text;
+      NewCounty@1170170004 : Text;
+      NewEntryDate@1170170003 : Date;
+      NewLeavingDate@1170170002 : Date;
+      NewCountryRegionCode@1170170001 : Text;
+    BEGIN
+      // Given
+      NewName := LibraryUtility.GenerateRandomText(MAXSTRLEN(IntegrTable.Name));
+      NewName2 := LibraryUtility.GenerateRandomText(MAXSTRLEN(IntegrTable."Name 2"));
+      NewAddress := LibraryUtility.GenerateRandomText(MAXSTRLEN(IntegrTable.Address));
+      NewAddress2 := LibraryUtility.GenerateRandomText(MAXSTRLEN(IntegrTable."Address 2"));
+      NewCity := LibraryUtility.GenerateRandomText(MAXSTRLEN(IntegrTable.City));
+      NewPhoneNo := LibraryUtility.GenerateRandomNumericText(MAXSTRLEN(IntegrTable."Phone No."));
+      NewVATRegistrationNo := LibraryUtility.GenerateRandomText(8) + 'A';
+      NewVATRegistrationNo := '12345678Y';
+      NewPostCode := LibraryUtility.GenerateRandomText(MAXSTRLEN(IntegrTable."Post Code"));
+      NewCounty := LibraryUtility.GenerateRandomText(MAXSTRLEN(IntegrTable.County));
+      NewEntryDate := LibraryUtility.GenerateRandomDate(DMY2DATE(1,1,DATE2DMY(WORKDATE,3) - 2),DMY2DATE(31,12,DATE2DMY(WORKDATE,3) - 2));
+      NewLeavingDate := LibraryUtility.GenerateRandomDate(DMY2DATE(1,1,DATE2DMY(WORKDATE,3) - 1),DMY2DATE(31,12,DATE2DMY(WORKDATE,3) - 1));
+      LibraryERM.CreateCountryRegion(CountryRegion);
+      NewCountryRegionCode := CountryRegion.Code;
+      LibraryIntegrTableInteg.CreateIntegrTable(IntegrTable);
+      IntegrTable.CreateCustomer;
+      IntegrTable.CreateVendor;
+
+      // When
+      IntegrTable.TESTFIELD("Customer No.");
+      IntegrTable.TESTFIELD("Vendor No.");
+      Customer.GET(IntegrTable."Customer No.");
+      Customer.VALIDATE(Name,NewName);
+      Customer.VALIDATE("Name 2",NewName2);
+      Customer.VALIDATE(Address,NewAddress);
+      Customer.VALIDATE("Address 2",NewAddress2);
+      Customer.VALIDATE(City,NewCity);
+      Customer.VALIDATE("Phone No.",NewPhoneNo);
+      Customer.VALIDATE("VAT Registration No.",NewVATRegistrationNo);
+      Customer.VALIDATE("Post Code",NewPostCode);
+      Customer.VALIDATE(County,NewCounty);
+      Customer.VALIDATE("Country/Region Code",NewCountryRegionCode);
+      Customer.MODIFY(TRUE);
+
+      // Then
+      IntegrTable.GET(IntegrTable."No.");
+      TestIntegrTableCardFromCustomer(IntegrTable."No.");
+      TestVendorCard(IntegrTable);
+    END;
+
+    [Test]
+    [HandlerFunctions(Modal8620PageHandler,MessageHandler)]
+    PROCEDURE UpdateIntegrTableAndCustomerFromVendor@1170170013();
+    VAR
+      Vendor@1170170000 : Record 23;
+      CountryRegion@1170170015 : Record 9;
+      IntegrTable@1170170014 : Record 91850;
+      NewName@1170170013 : Text;
+      NewName2@1170170012 : Text;
+      NewAddress@1170170011 : Text;
+      NewAddress2@1170170010 : Text;
+      NewCity@1170170009 : Text;
+      NewPhoneNo@1170170008 : Text;
+      NewVATRegistrationNo@1170170007 : Text;
+      NewPostCode@1170170006 : Text;
+      NewCounty@1170170004 : Text;
+      NewEntryDate@1170170003 : Date;
+      NewLeavingDate@1170170002 : Date;
+      NewCountryRegionCode@1170170001 : Text;
+    BEGIN
+      // Given
+      NewName := LibraryUtility.GenerateRandomText(MAXSTRLEN(IntegrTable.Name));
+      NewName2 := LibraryUtility.GenerateRandomText(MAXSTRLEN(IntegrTable."Name 2"));
+      NewAddress := LibraryUtility.GenerateRandomText(MAXSTRLEN(IntegrTable.Address));
+      NewAddress2 := LibraryUtility.GenerateRandomText(MAXSTRLEN(IntegrTable."Address 2"));
+      NewCity := LibraryUtility.GenerateRandomText(MAXSTRLEN(IntegrTable.City));
+      NewPhoneNo := LibraryUtility.GenerateRandomNumericText(MAXSTRLEN(IntegrTable."Phone No."));
+      NewVATRegistrationNo := LibraryUtility.GenerateRandomText(8) + 'A';
+      NewVATRegistrationNo := '12345678Y';
+      NewPostCode := LibraryUtility.GenerateRandomText(MAXSTRLEN(IntegrTable."Post Code"));
+      NewCounty := LibraryUtility.GenerateRandomText(MAXSTRLEN(IntegrTable.County));
+      NewEntryDate := LibraryUtility.GenerateRandomDate(DMY2DATE(1,1,DATE2DMY(WORKDATE,3) - 2),DMY2DATE(31,12,DATE2DMY(WORKDATE,3) - 2));
+      NewLeavingDate := LibraryUtility.GenerateRandomDate(DMY2DATE(1,1,DATE2DMY(WORKDATE,3) - 1),DMY2DATE(31,12,DATE2DMY(WORKDATE,3) - 1));
+      LibraryERM.CreateCountryRegion(CountryRegion);
+      NewCountryRegionCode := CountryRegion.Code;
+      LibraryIntegrTableInteg.CreateIntegrTable(IntegrTable);
+      IntegrTable.CreateCustomer;
+      IntegrTable.CreateVendor;
+
+      // When
+      IntegrTable.TESTFIELD("Customer No.");
+      IntegrTable.TESTFIELD("Vendor No.");
+      Vendor.GET(IntegrTable."Vendor No.");
+      Vendor.VALIDATE(Name,NewName);
+      Vendor.VALIDATE("Name 2",NewName2);
+      Vendor.VALIDATE(Address,NewAddress);
+      Vendor.VALIDATE("Address 2",NewAddress2);
+      Vendor.VALIDATE(City,NewCity);
+      Vendor.VALIDATE("Phone No.",NewPhoneNo);
+      Vendor.VALIDATE("VAT Registration No.",NewVATRegistrationNo);
+      Vendor.VALIDATE("Post Code",NewPostCode);
+      Vendor.VALIDATE(County,NewCounty);
+      Vendor.VALIDATE("Country/Region Code",NewCountryRegionCode);
+      Vendor.MODIFY(TRUE);
+
+      // Then
+      IntegrTable.GET(IntegrTable."No.");
+      TestIntegrTableCardFromVendor(IntegrTable."No.");
+      TestCustomerCard(IntegrTable);
+    END;
+
+    [Test]
+    [HandlerFunctions(Modal8620PageHandler,MessageHandler)]
+    PROCEDURE UpdateCustomerAndCustomerFromIntegrTable@1170170019();
+    VAR
+      Vendor@1170170000 : Record 23;
+      CountryRegion@1170170015 : Record 9;
+      IntegrTable@1170170014 : Record 91850;
+      NewName@1170170013 : Text;
+      NewName2@1170170012 : Text;
+      NewAddress@1170170011 : Text;
+      NewAddress2@1170170010 : Text;
+      NewCity@1170170009 : Text;
+      NewPhoneNo@1170170008 : Text;
+      NewVATRegistrationNo@1170170007 : Text;
+      NewPostCode@1170170006 : Text;
+      NewCounty@1170170004 : Text;
+      NewEntryDate@1170170003 : Date;
+      NewLeavingDate@1170170002 : Date;
+      NewCountryRegionCode@1170170001 : Text;
+    BEGIN
+      // Given
+      NewName := LibraryUtility.GenerateRandomText(MAXSTRLEN(IntegrTable.Name));
+      NewName2 := LibraryUtility.GenerateRandomText(MAXSTRLEN(IntegrTable."Name 2"));
+      NewAddress := LibraryUtility.GenerateRandomText(MAXSTRLEN(IntegrTable.Address));
+      NewAddress2 := LibraryUtility.GenerateRandomText(MAXSTRLEN(IntegrTable."Address 2"));
+      NewCity := LibraryUtility.GenerateRandomText(MAXSTRLEN(IntegrTable.City));
+      NewPhoneNo := LibraryUtility.GenerateRandomNumericText(MAXSTRLEN(IntegrTable."Phone No."));
+      NewVATRegistrationNo := LibraryUtility.GenerateRandomText(8) + 'A';
+      NewVATRegistrationNo := '12345678Y';
+      NewPostCode := LibraryUtility.GenerateRandomText(MAXSTRLEN(IntegrTable."Post Code"));
+      NewCounty := LibraryUtility.GenerateRandomText(MAXSTRLEN(IntegrTable.County));
+      NewEntryDate := LibraryUtility.GenerateRandomDate(DMY2DATE(1,1,DATE2DMY(WORKDATE,3) - 2),DMY2DATE(31,12,DATE2DMY(WORKDATE,3) - 2));
+      NewLeavingDate := LibraryUtility.GenerateRandomDate(DMY2DATE(1,1,DATE2DMY(WORKDATE,3) - 1),DMY2DATE(31,12,DATE2DMY(WORKDATE,3) - 1));
+      LibraryERM.CreateCountryRegion(CountryRegion);
+      NewCountryRegionCode := CountryRegion.Code;
+      LibraryIntegrTableInteg.CreateIntegrTable(IntegrTable);
+      IntegrTable.CreateCustomer;
+      IntegrTable.CreateVendor;
+
+      // When
+      IntegrTable.TESTFIELD("Customer No.");
+      IntegrTable.TESTFIELD("Vendor No.");
+      IntegrTable.VALIDATE(Name,NewName);
+      IntegrTable.VALIDATE("Name 2",NewName2);
+      IntegrTable.VALIDATE(Address,NewAddress);
+      IntegrTable.VALIDATE("Address 2",NewAddress2);
+      IntegrTable.VALIDATE(City,NewCity);
+      IntegrTable.VALIDATE("Phone No.",NewPhoneNo);
+      IntegrTable.VALIDATE("VAT Registration No.",NewVATRegistrationNo);
+      IntegrTable.VALIDATE("Post Code",NewPostCode);
+      IntegrTable.VALIDATE(County,NewCounty);
+      IntegrTable.VALIDATE("Country/Region Code",NewCountryRegionCode);
+      IntegrTable.MODIFY(TRUE);
+
+      // Then
+      TestCustomerCard(IntegrTable);
+      TestVendorCard(IntegrTable);
+    END;
+
+    [ModalPageHandler]
+    PROCEDURE Modal8620PageHandler@1170170002(VAR ConfigTemplateList@1170170000 : Page 8620;VAR Response@1170170001 : Action);
+    BEGIN
+      Response := ACTION::OK;
+    END;
+
+    [MessageHandler]
+    PROCEDURE MessageHandler@1170170011(Message@1170170000 : Text[1024]);
+    BEGIN
+    END;
+
+    [ConfirmHandler]
+    PROCEDURE ConfirmHandler@15(Question@1000 : Text[1024];VAR Reply@1001 : Boolean);
+    BEGIN
+      Reply := TRUE;
+    END;
+
+    LOCAL PROCEDURE TestCustomerCard@1170170006(IntegrTable@1170170000 : Record 91850);
+    VAR
+      Customer@1170170001 : Record 18;
+    BEGIN
+      WITH Customer DO BEGIN
+        IntegrTable.TESTFIELD("Customer No.");
+        GET(IntegrTable."Customer No.");
+        TESTFIELD(Name,IntegrTable.Name);
+        TESTFIELD("Name 2",IntegrTable."Name 2");
+        TESTFIELD(Address,IntegrTable.Address);
+        TESTFIELD("Address 2",IntegrTable."Address 2");
+        TESTFIELD(City,IntegrTable.City);
+        TESTFIELD("Phone No.",IntegrTable."Phone No.");
+        TESTFIELD("VAT Registration No.",IntegrTable."VAT Registration No.");
+        TESTFIELD("Post Code",IntegrTable."Post Code");
+        TESTFIELD(County,IntegrTable.County);
+        TESTFIELD("Country/Region Code",IntegrTable."Country/Region Code");
+      END;
+    END;
+
+    LOCAL PROCEDURE TestVendorCard@1170170009(IntegrTable@1170170000 : Record 91850);
+    VAR
+      Vendor@1170170001 : Record 23;
+    BEGIN
+      WITH Vendor DO BEGIN
+        IntegrTable.TESTFIELD("Vendor No.");
+        GET(IntegrTable."Vendor No.");
+        TESTFIELD(Name,IntegrTable.Name);
+        TESTFIELD("Name 2",IntegrTable."Name 2");
+        TESTFIELD(Address,IntegrTable.Address);
+        TESTFIELD("Address 2",IntegrTable."Address 2");
+        TESTFIELD(City,IntegrTable.City);
+        TESTFIELD("Phone No.",IntegrTable."Phone No.");
+        TESTFIELD("VAT Registration No.",IntegrTable."VAT Registration No.");
+        TESTFIELD("Post Code",IntegrTable."Post Code");
+        TESTFIELD(County,IntegrTable.County);
+        TESTFIELD("Country/Region Code",IntegrTable."Country/Region Code");
+      END;
+    END;
+
+    LOCAL PROCEDURE TestIntegrTableCardFromCustomer@1170170008(IntegrTableNo@1170170000 : Code[20]);
+    VAR
+      IntegrTable@1170170001 : Record 91850;
+      Customer@1170170002 : Record 18;
+    BEGIN
+      WITH IntegrTable DO BEGIN
+        GET(IntegrTableNo);
+        TESTFIELD("Customer No.");
+        Customer.GET(IntegrTable."Customer No.");
+        TESTFIELD(Name,Customer.Name);
+        TESTFIELD("Name 2",Customer."Name 2");
+        TESTFIELD(Address,Customer.Address);
+        TESTFIELD("Address 2",Customer."Address 2");
+        TESTFIELD(City,Customer.City);
+        TESTFIELD("Phone No.",Customer."Phone No.");
+        TESTFIELD("VAT Registration No.",Customer."VAT Registration No.");
+        TESTFIELD("Post Code",Customer."Post Code");
+        TESTFIELD(County,Customer.County);
+        TESTFIELD("Country/Region Code",Customer."Country/Region Code");
+      END;
+    END;
+
+    LOCAL PROCEDURE TestIntegrTableCardFromVendor@1170170017(IntegrTableNo@1170170000 : Code[20]);
+    VAR
+      IntegrTable@1170170001 : Record 91850;
+      Vendor@1170170002 : Record 23;
+    BEGIN
+      WITH IntegrTable DO BEGIN
+        GET(IntegrTableNo);
+        TESTFIELD("Vendor No.");
+        Vendor.GET(IntegrTable."Vendor No.");
+        TESTFIELD(Name,Vendor.Name);
+        TESTFIELD("Name 2",Vendor."Name 2");
+        TESTFIELD(Address,Vendor.Address);
+        TESTFIELD("Address 2",Vendor."Address 2");
+        TESTFIELD(City,Vendor.City);
+        TESTFIELD("Phone No.",Vendor."Phone No.");
+        TESTFIELD("VAT Registration No.",Vendor."VAT Registration No.");
+        TESTFIELD("Post Code",Vendor."Post Code");
+        TESTFIELD(County,Vendor.County);
+        TESTFIELD("Country/Region Code",Vendor."Country/Region Code");
+      END;
+    END;
+
+    BEGIN
+    END.
+  }
+}
+
+OBJECT Page 91850 <IntegrTable> List
+{
+  OBJECT-PROPERTIES
+  {
+    Date=02/10/20;
+    Time=11:37:41;
+    Modified=Yes;
+    Version List=MCPES7.10.00;
+  }
+  PROPERTIES
+  {
+    Editable=No;
+    SourceTable=Table91850;
+    PageType=List;
+    CardPageID=<IntegrTable> Card;
+    ActionList=ACTIONS
+    {
+      { 1900000003;0 ;ActionContainer;
+                      ActionContainerType=RelatedInformation }
+      { 1170170044;1 ;ActionGroup;
+                      CaptionML=ESP=&Maestro }
+      { 1170170045;2 ;Action    ;
+                      CaptionML=[ENU=Card;
+                                 ESP=&Ficha];
+                      RunObject=Page 91851;
+                      RunPageLink=No.=FIELD(No.);
+                      Promoted=Yes;
+                      Image=Card;
+                      PromotedCategory=Process }
+      { 1170170046;2 ;Action    ;
+                      CaptionML=[ENU=Customer;
+                                 ESP=C&liente];
+                      RunObject=Page 22;
+                      RunPageLink=No.=FIELD(Customer No.);
+                      Promoted=Yes;
+                      Image=CustomerLedger;
+                      PromotedCategory=New;
+                      RunPageMode=View }
+      { 1170170007;2 ;Action    ;
+                      CaptionML=[ENU=Vendor;
+                                 ESP=&Proveedor];
+                      RunObject=Page 27;
+                      RunPageLink=No.=FIELD(Vendor No.);
+                      Promoted=Yes;
+                      Image=VendorLedger;
+                      PromotedCategory=New;
+                      RunPageMode=View }
+      { 1170170006;1 ;ActionGroup;
+                      CaptionML=ESP=Acci&ones }
+      { 1170170005;2 ;Action    ;
+                      CaptionML=[ENU=Create Customer;
+                                 ESP=&Crear cliente];
+                      Promoted=Yes;
+                      Image=CreateInteraction;
+                      PromotedCategory=Process;
+                      OnAction=BEGIN
+                                 CreateCustomer;
+                                 CurrPage.UPDATE;
+                               END;
+                                }
+      { 1170170008;2 ;Action    ;
+                      CaptionML=[ENU=Create Vendor;
+                                 ESP=&Crear proveedor];
+                      Promoted=Yes;
+                      Image=CreateInteraction;
+                      PromotedCategory=Process;
+                      OnAction=BEGIN
+                                 CreateVendor;
+                                 CurrPage.UPDATE;
+                               END;
+                                }
+    }
+  }
+  CONTROLS
+  {
+    { 1900000001;0;Container;
+                ContainerType=ContentArea }
+
+    { 1170170000;1;Group  ;
+                GroupType=Repeater }
+
+    { 1170170001;2;Field  ;
+                SourceExpr="No." }
+
+    { 1170170003;2;Field  ;
+                SourceExpr=Name }
+
+    { 1170170011;2;Field  ;
+                SourceExpr=City }
+
+    { 1170170013;2;Field  ;
+                SourceExpr="Phone No." }
+
+    { 1170170017;2;Field  ;
+                SourceExpr="VAT Registration No." }
+
+    { 1170170019;2;Field  ;
+                SourceExpr="Post Code" }
+
+    { 1170170021;2;Field  ;
+                SourceExpr=County }
+
+    { 1170170004;2;Field  ;
+                SourceExpr="Country/Region Code" }
+
+    { 1170170023;2;Field  ;
+                SourceExpr="Customer No.";
+                Visible=FALSE }
+
+    { 1170170033;2;Field  ;
+                SourceExpr="Entry Date";
+                Visible=FALSE }
+
+    { 1170170035;2;Field  ;
+                SourceExpr="Leaving Date";
+                Visible=FALSE }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+
+OBJECT Page 91851 <IntegrTable> Card
+{
+  OBJECT-PROPERTIES
+  {
+    Date=02/10/20;
+    Time=11:37:52;
+    Modified=Yes;
+    Version List=MCPES7.10.00;
+  }
+  PROPERTIES
+  {
+    SourceTable=Table91850;
+    PageType=Card;
+    OnOpenPage=BEGIN
+                 SETRANGE("No.");
+               END;
+
+    ActionList=ACTIONS
+    {
+      { 1170170022;0 ;ActionContainer;
+                      ActionContainerType=RelatedInformation }
+      { 1170170018;1 ;ActionGroup;
+                      CaptionML=ESP=&Maestro }
+      { 1170170016;2 ;Action    ;
+                      CaptionML=[ENU=Card;
+                                 ESP=&Ficha];
+                      RunObject=Page 91851;
+                      RunPageLink=No.=FIELD(No.);
+                      Promoted=Yes;
+                      Image=Card;
+                      PromotedCategory=Process }
+      { 1170170014;2 ;Action    ;
+                      CaptionML=[ENU=Customer;
+                                 ESP=C&liente];
+                      RunObject=Page 22;
+                      RunPageLink=No.=FIELD(Customer No.);
+                      Promoted=Yes;
+                      Image=CustomerLedger;
+                      PromotedCategory=New;
+                      RunPageMode=View }
+      { 1170170012;2 ;Action    ;
+                      CaptionML=[ENU=Vendor;
+                                 ESP=&Proveedor];
+                      RunObject=Page 27;
+                      RunPageLink=No.=FIELD(Vendor No.);
+                      Promoted=Yes;
+                      Image=VendorLedger;
+                      PromotedCategory=New;
+                      RunPageMode=View }
+      { 1170170010;1 ;ActionGroup;
+                      CaptionML=ESP=Acci&ones }
+      { 1170170008;2 ;Action    ;
+                      CaptionML=[ENU=Create Customer;
+                                 ESP=&Crear cliente];
+                      Promoted=Yes;
+                      Image=CreateInteraction;
+                      PromotedCategory=Process;
+                      OnAction=BEGIN
+                                 CreateCustomer;
+                                 CurrPage.UPDATE;
+                               END;
+                                }
+      { 1170170006;2 ;Action    ;
+                      CaptionML=[ENU=Create Vendor;
+                                 ESP=&Crear proveedor];
+                      Promoted=Yes;
+                      Image=CreateInteraction;
+                      PromotedCategory=Process;
+                      OnAction=BEGIN
+                                 CreateVendor;
+                                 CurrPage.UPDATE;
+                               END;
+                                }
+    }
+  }
+  CONTROLS
+  {
+    { 1900000001;0;Container;
+                ContainerType=ContentArea }
+
+    { 1170170000;1;Group  ;
+                CaptionML=ESP=General }
+
+    { 1170170001;2;Field  ;
+                SourceExpr="No.";
+                OnAssistEdit=BEGIN
+                               IF AssistEdit(xRec) THEN
+                                 CurrPage.UPDATE;
+                             END;
+                              }
+
+    { 1170170003;2;Field  ;
+                SourceExpr=Name }
+
+    { 1170170005;2;Field  ;
+                SourceExpr="Name 2" }
+
+    { 1170170007;2;Field  ;
+                SourceExpr=Address }
+
+    { 1170170009;2;Field  ;
+                SourceExpr="Address 2" }
+
+    { 1170170015;2;Field  ;
+                CaptionML=[ENU=Post Code;
+                           ESP=C.P.+Poblaci¢n];
+                SourceExpr="Post Code" }
+
+    { 1170170011;2;Field  ;
+                SourceExpr=City }
+
+    { 1170170017;2;Field  ;
+                SourceExpr=County }
+
+    { 1170170004;2;Field  ;
+                SourceExpr="Country/Region Code" }
+
+    { 1170170013;2;Field  ;
+                SourceExpr="Phone No." }
+
+    { 1170170021;2;Field  ;
+                SourceExpr="VAT Registration No." }
+
+    { 1170170023;2;Field  ;
+                SourceExpr="Customer No." }
+
+    { 1170170020;2;Field  ;
+                SourceExpr="Vendor No." }
+
+    { 1170170037;2;Field  ;
+                SourceExpr="Entry Date" }
+
+    { 1170170039;2;Field  ;
+                SourceExpr="Leaving Date" }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+
+OBJECT Page 91852 <IntegrTable> Integrat. Setup
+{
+  OBJECT-PROPERTIES
+  {
+    Date=01/07/14;
+    Time=12:00:00;
+    Modified=Yes;
+    Version List=MCPES7.10.00;
+  }
+  PROPERTIES
+  {
+    SourceTable=Table91851;
+    PageType=Card;
+  }
+  CONTROLS
+  {
+    { 1170170000;0;Container;
+                ContainerType=ContentArea }
+
+    { 1170170001;1;Group  ;
+                Name=General;
+                GroupType=Group }
+
+    { 1170170002;2;Field  ;
+                SourceExpr="<IntegrTable> No. Series" }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

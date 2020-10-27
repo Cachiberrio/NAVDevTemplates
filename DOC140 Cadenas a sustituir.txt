@@ -1,0 +1,26 @@
+<DocumentName>
+<PluralDocumentName>
+<NombreDocumento>
+<nombreDocumento>
+<NombreDocumentoPlural>
+<nombreDocumentoPlural>
+DocumentName
+
+Sustitución de caracteres extraños
+======================================
+"á"= " "
+"é" = "‚"
+"í" = "¡"
+"ó" = "¢"
+'ú" = "£"
+
+µÖàé
+
+"Á" = "µ"
+"É" = ""
+"Í" = "Ö"
+"Ó" = "à"
+"Ú" = "é"
+
+"ñ" = "¤"
+"Ñ" = "¥"

@@ -1,0 +1,27 @@
+MAE140 Maestro con series de numeración Cadenas a sustituir
+=============================================================
+<TableName>
+<NombreTabla>
+<NombreTablaPlural>
+TableName
+NombreTabla
+
+
+Sustitución de caracteres extraños
+======================================
+"á"= " "
+"é" = "‚"
+"í" = "¡"
+"ó" = "¢"
+'ú" = "£"
+
+µÖàé
+
+"Á" = "µ"
+"É" = ""
+"Í" = "Ö"
+"Ó" = "à"
+"Ú" = "é"
+
+"ñ" = "¤"
+"Ñ" = "¥"

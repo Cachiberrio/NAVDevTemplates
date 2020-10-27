@@ -1,0 +1,129 @@
+OBJECT Table 50000 <TableName>
+{
+  OBJECT-PROPERTIES
+  {
+    Date=06/10/20;
+    Time=15:17:44;
+    Modified=Yes;
+    Version List=RLT;
+  }
+  PROPERTIES
+  {
+    CaptionML=[ENU=<TableName>;
+               ESP=<NombreTabla>];
+  }
+  FIELDS
+  {
+    { 1   ;   ;Table No.           ;Integer       ;DataClassification=ToBeClassified;
+                                                   CaptionML=[ENU=Table No.;
+                                                              ESP=No. tabla] }
+    { 2   ;   ;Document Type       ;Integer       ;DataClassification=ToBeClassified;
+                                                   CaptionML=[ENU=Document Type;
+                                                              ESP=Tipo documento] }
+    { 3   ;   ;Document No.        ;Code20        ;DataClassification=ToBeClassified;
+                                                   CaptionML=[ENU=Document No.;
+                                                              ESP=No. documento] }
+    { 4   ;   ;Reference No.       ;Integer       ;DataClassification=ToBeClassified;
+                                                   CaptionML=[ENU=Reference No.;
+                                                              ESP=No. referencia] }
+    { 5   ;   ;Journal Template Name;Code10       ;DataClassification=ToBeClassified;
+                                                   CaptionML=[ENU=Journal Template Name;
+                                                              ESP=Nombre libro diario] }
+    { 6   ;   ;Journal Batch Name  ;Code10        ;DataClassification=ToBeClassified;
+                                                   CaptionML=[ENU=Journal Batch Name;
+                                                              ESP=Nombre secci¢n diario] }
+    { 7   ;   ;PO Line No.         ;Integer       ;DataClassification=ToBeClassified;
+                                                   CaptionML=[ENU=PO Line No.;
+                                                              ESP=No. l¡nea OP] }
+  }
+  KEYS
+  {
+    {    ;Table No.,Document Type,Document No.,Reference No.,Journal Template Name,Journal Batch Name,PO Line No.;
+                                                   Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+
+OBJECT Codeunit 50000 <TableName> Management
+{
+  OBJECT-PROPERTIES
+  {
+    Date=06/10/20;
+    Time=13:53:36;
+    Modified=Yes;
+    Version List=RLT;
+  }
+  PROPERTIES
+  {
+    OnRun=BEGIN
+          END;
+
+  }
+  CODE
+  {
+
+    LOCAL PROCEDURE ShowPluralTableName@1170170001(TableNo@1170170001 : Integer;DocumentType@1170170002 : Integer;DocumentNo@1170170003 : Code[20];ReferenceNo@1170170004 : Integer;JournalTemplateName@1170170005 : Code[10];JournalBatchName@1170170006 : Code[10];POLineNo@1170170007 : Integer);
+    VAR
+      TableName@1170170000 : Record 50000;
+      PluralTableName@1170170008 : Page 50000;
+    BEGIN
+      TableName.RESET;
+      TableName.SETRANGE("Table No.",TableNo);
+      TableName.SETRANGE("Document Type",DocumentType);
+      TableName.SETRANGE("Document No.",DocumentNo);
+      TableName.SETRANGE("Reference No.",ReferenceNo);
+      TableName.SETRANGE("Journal Template Name",JournalTemplateName);
+      TableName.SETRANGE("Journal Batch Name",JournalBatchName);
+      TableName.SETRANGE("PO Line No.",POLineNo);
+      CLEAR(PluralTableName);
+      PluralTableName.SETRECORD(TableName);
+      PluralTableName.RUN;
+    END;
+
+    BEGIN
+    END.
+  }
+}
+
+OBJECT Page 50000 <PluralTableName>
+{
+  OBJECT-PROPERTIES
+  {
+    Date=06/10/20;
+    Time=13:47:03;
+    Modified=Yes;
+    Version List=RLT;
+  }
+  PROPERTIES
+  {
+    CaptionML=[ENU=<PluralTableName>;
+               ESP=<NombreTablaPlural>];
+    SourceTable=Table50000;
+    PageType=List;
+  }
+  CONTROLS
+  {
+    { 1170170000;0;Container;
+                ContainerType=ContentArea }
+
+    { 1170170001;1;Group  ;
+                Name=Group;
+                GroupType=Repeater }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

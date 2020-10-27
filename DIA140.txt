@@ -1,0 +1,2478 @@
+OBJECT Table 7014450 <JournalName> Journal Template
+{
+  OBJECT-PROPERTIES
+  {
+    Date=30/09/20;
+    Time=12:00:00;
+    Modified=Yes;
+    Version List=DIAES14.00;
+  }
+  PROPERTIES
+  {
+    OnInsert=BEGIN
+               VALIDATE("Page ID");
+             END;
+
+    OnDelete=BEGIN
+               JournalNameJournalLine.SETRANGE("Journal Template Name",Name);
+               JournalNameJournalLine.DELETEALL(TRUE);
+               JournalNameJournalBatch.SETRANGE("Journal Template Name",Name);
+               JournalNameJournalBatch.DELETEALL;
+             END;
+
+    CaptionML=[ENU=<JournalName> Journal Template;
+               ESP=Libro diario <NombreDiario>];
+    LookupPageID=Page7014452;
+    DrillDownPageID=Page7014452;
+  }
+  FIELDS
+  {
+    { 1   ;   ;Name                ;Code10        ;CaptionML=[ENU=Name;
+                                                              ESP=Nombre];
+                                                   NotBlank=Yes }
+    { 2   ;   ;Description         ;Text80        ;CaptionML=[ENU=Description;
+                                                              ESP=Descripci¢n] }
+    { 3   ;   ;Page ID             ;Integer       ;TableRelation=Object.ID WHERE (Type=CONST(Page));
+                                                   CaptionML=[ENU=Page ID;
+                                                              ESP=ID P gina] }
+    { 4   ;   ;Page Name           ;Text250       ;FieldClass=FlowField;
+                                                   CalcFormula=Lookup(AllObjWithCaption."Object Caption" WHERE (Object Type=CONST(Page),
+                                                                                                                Object ID=FIELD(Page ID)));
+                                                   CaptionML=[ENU=Page Name;
+                                                              ESP=Nombre formulario];
+                                                   Editable=No }
+    { 5   ;   ;No. series          ;Code20        ;TableRelation="No. Series".Code;
+                                                   OnValidate=BEGIN
+                                                                IF "No. series" <> '' THEN BEGIN
+                                                                  IF "No. series" = "Posting No. series" THEN
+                                                                    "Posting No. series" := '';
+                                                                END;
+                                                              END;
+
+                                                   CaptionML=[ENU=No. series;
+                                                              ESP=No. serie] }
+    { 6   ;   ;Posting No. series  ;Code20        ;TableRelation="No. Series".Code;
+                                                   OnValidate=BEGIN
+                                                                IF ("Posting No. series" = "No. series") AND ("Posting No. series" <> '') THEN
+                                                                  FIELDERROR("Posting No. series",STRSUBSTNO(Text001,"Posting No. series"));
+                                                              END;
+
+                                                   CaptionML=[ENU=Posting No. series;
+                                                              ESP=No. serie registro] }
+    { 8   ;   ;Source Code         ;Code10        ;TableRelation="Source Code";
+                                                   OnValidate=BEGIN
+                                                                JournalNameJournalLine.SETRANGE("Journal Template Name",Name);
+                                                                JournalNameJournalLine.MODIFYALL("Source Code","Source Code");
+                                                                MODIFY;
+                                                              END;
+
+                                                   CaptionML=[ENU=Source Code;
+                                                              ESP=C¢d. origen] }
+    { 9   ;   ;Test Report ID      ;Integer       ;TableRelation=Object.ID WHERE (Type=CONST(Report));
+                                                   CaptionML=[ENU=Test Report ID;
+                                                              ESP=ID Informe prueba] }
+    { 10  ;   ;Posting Report ID   ;Integer       ;TableRelation=Object.ID WHERE (Type=CONST(Report));
+                                                   CaptionML=[ENU=Posting Report ID;
+                                                              ESP=ID Informe para registro] }
+    { 11  ;   ;Test Report Name    ;Text250       ;FieldClass=FlowField;
+                                                   CalcFormula=Lookup(AllObjWithCaption."Object Caption" WHERE (Object Type=CONST(Report),
+                                                                                                                Object ID=FIELD(Test Report ID)));
+                                                   CaptionML=[ENU=Test Report Name;
+                                                              ESP=Nombre informe prueba];
+                                                   Editable=No }
+    { 12  ;   ;Posting Report Name ;Text250       ;FieldClass=FlowField;
+                                                   CalcFormula=Lookup(AllObjWithCaption."Object Caption" WHERE (Object Type=CONST(Report),
+                                                                                                                Object ID=FIELD(Posting Report ID)));
+                                                   CaptionML=[ENU=Posting Report Name;
+                                                              ESP=Nombre informe para registro];
+                                                   Editable=No }
+    { 13  ;   ;Reason Code         ;Code10        ;TableRelation="Reason Code";
+                                                   CaptionML=[ENU=Reason Code;
+                                                              ESP=C¢d. auditor¡a] }
+  }
+  KEYS
+  {
+    {    ;Name                                    ;Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+    { 1   ;DropDown            ;Name,Description                         }
+  }
+  CODE
+  {
+    VAR
+      JournalNameJournalBatch@1170170001 : Record 7014451;
+      JournalNameJournalLine@1170170000 : Record 7014452;
+      Text000@1170170003 : TextConst 'ENU=Only the %1 field can be filled in on recurring journals.;ESP=S¢lo se debe completar el campo %1 en los diarios peri¢dicos.';
+      Text001@1170170002 : TextConst 'ENU=must not be %1;ESP=No puede ser %1.';
+
+    BEGIN
+    END.
+  }
+}
+
+OBJECT Table 7014451 <JournalName> Journal Batch
+{
+  OBJECT-PROPERTIES
+  {
+    Date=30/09/20;
+    Time=12:00:00;
+    Modified=Yes;
+    Version List=DIAES14.00;
+  }
+  PROPERTIES
+  {
+    OnInsert=BEGIN
+               LOCKTABLE;
+               JournalNameJournalTemplate.GET("Journal Template Name");
+             END;
+
+    OnDelete=BEGIN
+               JournalNameJournalLine.SETRANGE("Journal Template Name","Journal Template Name");
+               JournalNameJournalLine.SETRANGE("Journal Batch Name",Name);
+               JournalNameJournalLine.DELETEALL(TRUE);
+             END;
+
+    OnRename=BEGIN
+               JournalNameJournalLine.SETRANGE("Journal Template Name",xRec."Journal Template Name");
+               JournalNameJournalLine.SETRANGE("Journal Batch Name",xRec.Name);
+               WHILE JournalNameJournalLine.FINDFIRST DO
+                 JournalNameJournalLine.RENAME("Journal Template Name",Name,JournalNameJournalLine."Line No.");
+             END;
+
+    CaptionML=[ENU=<JournalName> Journal Batch;
+               ESP=Secci¢n diario <nombrediario>];
+    LookupPageID=Page7014453;
+    DrillDownPageID=Page7014453;
+  }
+  FIELDS
+  {
+    { 1   ;   ;Journal Template Name;Code10       ;TableRelation="<JournalName> Journal Template";
+                                                   CaptionML=[ENU=Journal Template Name;
+                                                              ESP=Nombre libro diario];
+                                                   NotBlank=Yes }
+    { 2   ;   ;Name                ;Code10        ;CaptionML=[ENU=Name;
+                                                              ESP=Nombre];
+                                                   NotBlank=Yes }
+    { 3   ;   ;Description         ;Text50        ;CaptionML=[ENU=Description;
+                                                              ESP=Descripci¢n] }
+    { 4   ;   ;Reason Code         ;Code10        ;TableRelation="Reason Code";
+                                                   OnValidate=BEGIN
+                                                                IF "Reason Code" <> xRec."Reason Code" THEN BEGIN
+                                                                  JournalNameJournalLine.SETRANGE("Journal Template Name","Journal Template Name");
+                                                                  JournalNameJournalLine.SETRANGE("Journal Batch Name",Name);
+                                                                  JournalNameJournalLine.MODIFYALL("Reason Code","Reason Code");
+                                                                  MODIFY;
+                                                                END;
+                                                              END;
+
+                                                   CaptionML=[ENU=Reason Code;
+                                                              ESP=C¢d. auditor¡a] }
+    { 5   ;   ;No. Series          ;Code10        ;TableRelation="No. Series";
+                                                   OnValidate=BEGIN
+                                                                IF "No. Series" <> '' THEN BEGIN
+                                                                  JournalNameJournalTemplate.GET("Journal Template Name");
+                                                                  IF "No. Series" = "Posting No. Series" THEN
+                                                                    VALIDATE("Posting No. Series",'');
+                                                                END;
+                                                              END;
+
+                                                   CaptionML=[ENU=No. Series;
+                                                              ESP=No. serie] }
+    { 6   ;   ;Posting No. Series  ;Code10        ;TableRelation="No. Series";
+                                                   OnValidate=BEGIN
+                                                                IF ("Posting No. Series" = "No. Series") AND ("Posting No. Series" <> '') THEN
+                                                                  FIELDERROR("Posting No. Series",STRSUBSTNO(Text001,"Posting No. Series"));
+                                                                JournalNameJournalLine.SETRANGE("Journal Template Name","Journal Template Name");
+                                                                JournalNameJournalLine.SETRANGE("Journal Batch Name",Name);
+                                                                JournalNameJournalLine.MODIFYALL("Posting No. Series","Posting No. Series");
+                                                                MODIFY;
+                                                              END;
+
+                                                   CaptionML=[ENU=Posting No. Series;
+                                                              ESP=No. serie registro] }
+  }
+  KEYS
+  {
+    {    ;Journal Template Name,Name              ;Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+    { 1   ;DropDown            ;Name,Description                         }
+  }
+  CODE
+  {
+    VAR
+      JournalNameJournalTemplate@1170170003 : Record 7014450;
+      JournalNameJournalLine@1170170002 : Record 7014452;
+      Text000@1170170001 : TextConst 'ENU=Only the %1 field can be filled in on recurring journals.;ESP=S¢lo se debe completar el campo %1 en los diarios peri¢dicos.';
+      Text001@1170170000 : TextConst 'ENU=must not be %1;ESP=No puede ser %1.';
+
+    PROCEDURE SetupNewJournalBatch@3();
+    BEGIN
+      JournalNameJournalTemplate.GET("Journal Template Name");
+      "No. Series" := JournalNameJournalTemplate."No. series";
+      "Posting No. Series" := JournalNameJournalTemplate."Posting No. series";
+      "Reason Code" := JournalNameJournalTemplate."Reason Code";
+    END;
+
+    BEGIN
+    END.
+  }
+}
+
+OBJECT Table 7014452 <JournalName> Journal Line
+{
+  OBJECT-PROPERTIES
+  {
+    Date=30/09/20;
+    Time=12:00:00;
+    Modified=Yes;
+    Version List=DIAES14.00;
+  }
+  PROPERTIES
+  {
+    CaptionML=[ENU=<JournalName> Journal Line;
+               ESP=L¡nea diario <nombrediario>];
+    LookupPageID=Page7014451;
+    DrillDownPageID=Page7014451;
+  }
+  FIELDS
+  {
+    { 1   ;   ;Journal Template Name;Code10       ;TableRelation="<JournalName> Journal Template".Name;
+                                                   CaptionML=[ENU=Journal Template Name;
+                                                              ESP=Nombre libro diario] }
+    { 2   ;   ;Journal Batch Name  ;Code10        ;TableRelation="<JournalName> Journal Batch".Name WHERE (Journal Template Name=FIELD(Journal Template Name));
+                                                   CaptionML=[ENU=Journal Batch Name;
+                                                              ESP=Nombre secci¢n diario] }
+    { 3   ;   ;Line No.            ;Integer       ;CaptionML=[ENU=Line No.;
+                                                              ESP=No. l¡nea] }
+    { 4   ;   ;Posting Date        ;Date          ;CaptionML=[ENU=Posting Date;
+                                                              ESP=Fecha registro] }
+    { 5   ;   ;Document No.        ;Code20        ;CaptionML=[ENU=Document No.;
+                                                              ESP=No. documento] }
+    { 6   ;   ;Description         ;Text80        ;CaptionML=[ENU=Description;
+                                                              ESP=Descripci¢n] }
+    { 7   ;   ;Posting No. Series  ;Code20        ;CaptionML=[ENU=Posting No. Series;
+                                                              ESP=No. serie registro] }
+    { 18  ;   ;Source Code         ;Code10        ;CaptionML=[ENU=Source Code;
+                                                              ESP=C¢d. origen] }
+    { 19  ;   ;Reason Code         ;Code10        ;TableRelation="Reason Code";
+                                                   CaptionML=[ENU=Reason Code;
+                                                              ESP=C¢d. auditor¡a] }
+    { 20  ;   ;Shortcut Dimension 1 Code;Code20   ;TableRelation="Dimension Value".Code WHERE (Global Dimension No.=CONST(1));
+                                                   OnValidate=BEGIN
+                                                                ValidateShortcutDimCode(1,"Shortcut Dimension 1 Code");
+                                                              END;
+
+                                                   CaptionML=[ENU=Shortcut Dimension 1 Code;
+                                                              ESP=C¢d. dim. acceso dir. 1];
+                                                   CaptionClass='1,2,1' }
+    { 21  ;   ;Shortcut Dimension 2 Code;Code20   ;TableRelation="Dimension Value".Code WHERE (Global Dimension No.=CONST(2));
+                                                   OnValidate=BEGIN
+                                                                ValidateShortcutDimCode(2,"Shortcut Dimension 2 Code");
+                                                              END;
+
+                                                   CaptionML=[ENU=Shortcut Dimension 2 Code;
+                                                              ESP=C¢d. dim. acceso dir. 2];
+                                                   CaptionClass='1,2,2' }
+    { 480 ;   ;Dimension Set ID    ;Integer       ;TableRelation="Dimension Set Entry";
+                                                   OnLookup=BEGIN
+                                                              ShowDimensions;
+                                                            END;
+
+                                                   CaptionML=[ENU=Dimension Set ID;
+                                                              ESP=Id. grupo dimensiones];
+                                                   Editable=No }
+  }
+  KEYS
+  {
+    {    ;Journal Template Name,Journal Batch Name,Line No.;
+                                                   Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+    VAR
+      JournalNameJournalTemplate@1170170004 : Record 7014450;
+      JournalNameJournalBatch@1170170005 : Record 7014451;
+      JournalNameJournalLine@1170170001 : Record 7014452;
+      NoSeriesMgt@1170170000 : Codeunit 396;
+      DimMgt@1170170009 : Codeunit 408;
+
+    PROCEDURE SetupNewLine@8(LastJournalNameJournalLine@1000 : Record 7014452);
+    BEGIN
+      JournalNameJournalTemplate.GET("Journal Template Name");
+      JournalNameJournalBatch.GET("Journal Template Name","Journal Batch Name");
+      JournalNameJournalLine.SETRANGE("Journal Template Name","Journal Template Name");
+      JournalNameJournalLine.SETRANGE("Journal Batch Name","Journal Batch Name");
+      IF JournalNameJournalLine.FINDFIRST THEN BEGIN
+        "Posting Date" := LastJournalNameJournalLine."Posting Date";
+        "Document No." := LastJournalNameJournalLine."Document No.";
+      END ELSE BEGIN
+        "Posting Date" := WORKDATE;
+        IF JournalNameJournalBatch."No. Series" <> '' THEN BEGIN
+          CLEAR(NoSeriesMgt);
+          "Document No." := NoSeriesMgt.TryGetNextNo(JournalNameJournalBatch."No. Series","Posting Date");
+        END;
+      END;
+      "Source Code" := JournalNameJournalTemplate."Source Code";
+      "Reason Code" := JournalNameJournalBatch."Reason Code";
+      "Posting No. Series" := JournalNameJournalBatch."Posting No. Series";
+    END;
+
+    PROCEDURE EmptyLine@5() : Boolean;
+    BEGIN
+    END;
+
+    PROCEDURE ValidateShortcutDimCode@29(FieldNumber@1000 : Integer;VAR ShortcutDimCode@1001 : Code[20]);
+    BEGIN
+      DimMgt.ValidateShortcutDimValues(FieldNumber,ShortcutDimCode,"Dimension Set ID");
+    END;
+
+    PROCEDURE ShowDimensions@25();
+    BEGIN
+      DimMgt.ShowDimensionSet("Dimension Set ID",STRSUBSTNO('%1 %2 %3',TABLECAPTION,"Document No.","Line No."));
+    END;
+
+    BEGIN
+    END.
+  }
+}
+
+OBJECT Table 7014453 <JournalName> Entry
+{
+  OBJECT-PROPERTIES
+  {
+    Date=30/09/20;
+    Time=12:00:00;
+    Modified=Yes;
+    Version List=DIAES14.00;
+  }
+  PROPERTIES
+  {
+    CaptionML=[ENU=<JournalName> Entry;
+               ESP=Mov. <nombrediario>];
+    LookupPageID=Page7014454;
+    DrillDownPageID=Page7014454;
+  }
+  FIELDS
+  {
+    { 1   ;   ;Entry No.           ;Integer       ;TableRelation="<JournalName> Journal Template".Name;
+                                                   CaptionML=[ENU=Entry No.;
+                                                              ESP=No. mov.] }
+    { 2   ;   ;Journal Batch Name  ;Code10        ;TableRelation="<JournalName> Journal Batch".Name;
+                                                   CaptionML=[ENU=Journal Batch Name;
+                                                              ESP=Nombre secci¢n diario] }
+    { 4   ;   ;Posting Date        ;Date          ;CaptionML=[ENU=Posting Date;
+                                                              ESP=Fecha registro] }
+    { 5   ;   ;Document No.        ;Code20        ;CaptionML=[ENU=Document No.;
+                                                              ESP=No. documento] }
+    { 6   ;   ;Description         ;Text80        ;CaptionML=[ENU=Description;
+                                                              ESP=Descripci¢n] }
+    { 7   ;   ;Posting No. Series  ;Code20        ;CaptionML=[ENU=Posting No. Series;
+                                                              ESP=No. serie registro] }
+    { 18  ;   ;Source Code         ;Code10        ;CaptionML=[ENU=Source Code;
+                                                              ESP=C¢d. origen] }
+    { 19  ;   ;Reason Code         ;Code10        ;TableRelation="Reason Code";
+                                                   CaptionML=[ENU=Reason Code;
+                                                              ESP=C¢d. auditor¡a] }
+    { 20  ;   ;Shortcut Dimension 1 Code;Code20   ;TableRelation="Dimension Value".Code WHERE (Global Dimension No.=CONST(1));
+                                                   CaptionML=[ENU=Shortcut Dimension 1 Code;
+                                                              ESP=C¢d. dim. acceso dir. 1];
+                                                   CaptionClass='1,2,1' }
+    { 21  ;   ;Shortcut Dimension 2 Code;Code20   ;TableRelation="Dimension Value".Code WHERE (Global Dimension No.=CONST(2));
+                                                   CaptionML=[ENU=Shortcut Dimension 2 Code;
+                                                              ESP=C¢d. dim. acceso dir. 2];
+                                                   CaptionClass='1,2,2' }
+    { 480 ;   ;Dimension Set ID    ;Integer       ;TableRelation="Dimension Set Entry";
+                                                   CaptionML=[ENU=Dimension Set ID;
+                                                              ESP=Id. grupo dimensiones];
+                                                   Editable=No }
+  }
+  KEYS
+  {
+    {    ;Entry No.                               ;Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+    VAR
+      DimMgt@1170170000 : Codeunit 408;
+
+    BEGIN
+    END.
+  }
+}
+
+OBJECT Report 7014450 <JournalName> Entries
+{
+  OBJECT-PROPERTIES
+  {
+    Date=30/09/20;
+    Time=12:00:00;
+    Modified=Yes;
+    Version List=DIAES14.00;
+  }
+  PROPERTIES
+  {
+    CaptionML=[ENU=<JournalName> Entries;
+               ESP=Movs. <nombrediario>];
+    OnPreReport=BEGIN
+                  Filters := "<JournalName> Entry".GETFILTERS;
+                END;
+
+  }
+  DATASET
+  {
+    { 1170170000;;DataItem;                  ;
+               DataItemTable=Table7014453;
+               OnAfterGetRecord=BEGIN
+                                  EntryDescription := UPPERCASE(COPYSTR("<JournalName> Entry".Description,1,1)) +
+                                                      LOWERCASE(COPYSTR("<JournalName> Entry".Description,2));
+                                END;
+                                 }
+
+    { 1170170014;1;Column;CompanyName        ;
+               SourceExpr=COMPANYNAME }
+
+    { 1170170013;1;Column;Today              ;
+               SourceExpr=FORMAT(TODAY,0,4) }
+
+    { 1170170012;1;Column;PageNo             ;
+               SourceExpr=CurrReport.PAGENO }
+
+    { 1170170015;1;Column;Title              ;
+               SourceExpr=ReportTitle }
+
+    { 1170170016;1;Column;PageNoCaption      ;
+               SourceExpr=PageNoCaptionLbl }
+
+    { 1170170001;1;Column;Date               ;
+               IncludeCaption=Yes;
+               SourceExpr="Posting Date" }
+
+    { 1170170003;1;Column;Description        ;
+               SourceExpr=EntryDescription }
+
+  }
+  REQUESTPAGE
+  {
+    PROPERTIES
+    {
+    }
+    CONTROLS
+    {
+    }
+  }
+  LABELS
+  {
+  }
+  CODE
+  {
+    VAR
+      ReportTitle@1170170007 : TextConst 'ENU=<JournalName> Entries;ESP=Movs. <NombreDiario>';
+      PageNoCaptionLbl@1170170008 : TextConst 'ESP=Pag.';
+      EntryDescription@1170170009 : Text;
+      Filters@1170170000 : Text;
+
+    BEGIN
+    END.
+  }
+  RDLDATA
+  {
+    <?xml version="1.0" encoding="utf-8"?>
+<Report xmlns="http://schemas.microsoft.com/sqlserver/reporting/2016/01/reportdefinition" xmlns:rd="http://schemas.microsoft.com/SQLServer/reporting/reportdesigner">
+  <AutoRefresh>0</AutoRefresh>
+  <DataSources>
+    <DataSource Name="DataSource">
+      <ConnectionProperties>
+        <DataProvider>SQL</DataProvider>
+        <ConnectString />
+      </ConnectionProperties>
+      <rd:SecurityType>None</rd:SecurityType>
+    </DataSource>
+  </DataSources>
+  <DataSets>
+    <DataSet Name="DataSet_Result">
+      <Query>
+        <DataSourceName>DataSource</DataSourceName>
+        <CommandText />
+      </Query>
+      <Fields>
+        <Field Name="CompanyName">
+          <DataField>CompanyName</DataField>
+        </Field>
+        <Field Name="Today">
+          <DataField>Today</DataField>
+        </Field>
+        <Field Name="PageNo">
+          <DataField>PageNo</DataField>
+        </Field>
+        <Field Name="Title">
+          <DataField>Title</DataField>
+        </Field>
+        <Field Name="PageNoCaption">
+          <DataField>PageNoCaption</DataField>
+        </Field>
+        <Field Name="Date">
+          <DataField>Date</DataField>
+        </Field>
+        <Field Name="Description">
+          <DataField>Description</DataField>
+        </Field>
+      </Fields>
+    </DataSet>
+  </DataSets>
+  <ReportSections>
+    <ReportSection>
+      <Body>
+        <ReportItems>
+          <Tablix Name="Tablix4">
+            <TablixBody>
+              <TablixColumns>
+                <TablixColumn>
+                  <Width>0.63541in</Width>
+                </TablixColumn>
+                <TablixColumn>
+                  <Width>3.11228in</Width>
+                </TablixColumn>
+              </TablixColumns>
+              <TablixRows>
+                <TablixRow>
+                  <Height>0.22917in</Height>
+                  <TablixCells>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="Fecha">
+                          <CanGrow>true</CanGrow>
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value>=Fields!Date.Value</Value>
+                                  <Style>
+                                    <FontSize>8pt</FontSize>
+                                    <Format>dd/MM/yy</Format>
+                                  </Style>
+                                </TextRun>
+                              </TextRuns>
+                              <Style />
+                            </Paragraph>
+                          </Paragraphs>
+                          <rd:DefaultName>Fecha</rd:DefaultName>
+                          <Style>
+                            <Border>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                            </Border>
+                            <PaddingLeft>2pt</PaddingLeft>
+                            <PaddingRight>2pt</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="Descripci¢n">
+                          <CanGrow>true</CanGrow>
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value>=Fields!Description.Value</Value>
+                                  <Style>
+                                    <FontSize>8pt</FontSize>
+                                  </Style>
+                                </TextRun>
+                              </TextRuns>
+                              <Style />
+                            </Paragraph>
+                          </Paragraphs>
+                          <rd:DefaultName>Descripci¢n</rd:DefaultName>
+                          <Style>
+                            <Border>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                            </Border>
+                            <PaddingLeft>2pt</PaddingLeft>
+                            <PaddingRight>2pt</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                  </TablixCells>
+                </TablixRow>
+              </TablixRows>
+            </TablixBody>
+            <TablixColumnHierarchy>
+              <TablixMembers>
+                <TablixMember />
+                <TablixMember />
+              </TablixMembers>
+            </TablixColumnHierarchy>
+            <TablixRowHierarchy>
+              <TablixMembers>
+                <TablixMember>
+                  <Group Name="Details" />
+                  <TablixMembers>
+                    <TablixMember />
+                  </TablixMembers>
+                </TablixMember>
+              </TablixMembers>
+            </TablixRowHierarchy>
+            <RepeatRowHeaders>true</RepeatRowHeaders>
+            <DataSetName>DataSet_Result</DataSetName>
+            <SortExpressions>
+              <SortExpression>
+                <Value>=Fields!Date.Value</Value>
+              </SortExpression>
+            </SortExpressions>
+            <Top>0.01389in</Top>
+            <Height>0.22917in</Height>
+            <Width>3.74769in</Width>
+            <Style>
+              <Border>
+                <Style>None</Style>
+              </Border>
+            </Style>
+          </Tablix>
+        </ReportItems>
+        <Height>1.88889in</Height>
+        <Style />
+      </Body>
+      <Width>7.16421in</Width>
+      <Page>
+        <PageHeader>
+          <Height>1.09028in</Height>
+          <PrintOnFirstPage>true</PrintOnFirstPage>
+          <PrintOnLastPage>true</PrintOnLastPage>
+          <ReportItems>
+            <Textbox Name="COMPANYNAME1">
+              <KeepTogether>true</KeepTogether>
+              <Paragraphs>
+                <Paragraph>
+                  <TextRuns>
+                    <TextRun>
+                      <Value>=First(Fields!CompanyName.Value, "DataSet_Result")</Value>
+                      <Style>
+                        <FontSize>7pt</FontSize>
+                      </Style>
+                    </TextRun>
+                  </TextRuns>
+                  <Style />
+                </Paragraph>
+              </Paragraphs>
+              <Top>0.49356cm</Top>
+              <Height>0.423cm</Height>
+              <Width>7.5cm</Width>
+              <Style>
+                <VerticalAlign>Middle</VerticalAlign>
+              </Style>
+            </Textbox>
+            <Textbox Name="UserIdTextBox">
+              <KeepTogether>true</KeepTogether>
+              <Paragraphs>
+                <Paragraph>
+                  <TextRuns>
+                    <TextRun>
+                      <Value>=User!UserID</Value>
+                      <Style>
+                        <FontSize>7pt</FontSize>
+                      </Style>
+                    </TextRun>
+                  </TextRuns>
+                  <Style>
+                    <TextAlign>Right</TextAlign>
+                  </Style>
+                </Paragraph>
+              </Paragraphs>
+              <Top>0.88128cm</Top>
+              <Left>14.94708cm</Left>
+              <Height>0.423cm</Height>
+              <Width>3.25cm</Width>
+              <ZIndex>1</ZIndex>
+              <DataElementOutput>NoOutput</DataElementOutput>
+              <Style>
+                <Border>
+                  <Style>None</Style>
+                </Border>
+                <VerticalAlign>Middle</VerticalAlign>
+              </Style>
+            </Textbox>
+            <Textbox Name="CurrReport_PAGENOCaption1">
+              <KeepTogether>true</KeepTogether>
+              <Paragraphs>
+                <Paragraph>
+                  <TextRuns>
+                    <TextRun>
+                      <Value>=Globals!PageNumber</Value>
+                      <Style>
+                        <FontSize>7pt</FontSize>
+                      </Style>
+                    </TextRun>
+                  </TextRuns>
+                  <Style />
+                </Paragraph>
+              </Paragraphs>
+              <Top>0.423cm</Top>
+              <Left>17.44708cm</Left>
+              <Height>0.423cm</Height>
+              <Width>0.75cm</Width>
+              <ZIndex>2</ZIndex>
+              <Style>
+                <VerticalAlign>Middle</VerticalAlign>
+              </Style>
+            </Textbox>
+            <Textbox Name="ExecutionTimeTextBox">
+              <KeepTogether>true</KeepTogether>
+              <Paragraphs>
+                <Paragraph>
+                  <TextRuns>
+                    <TextRun>
+                      <Value>=First(Fields!Today.Value, "DataSet_Result")</Value>
+                      <Style>
+                        <FontSize>7pt</FontSize>
+                        <Format>g</Format>
+                      </Style>
+                    </TextRun>
+                  </TextRuns>
+                  <Style>
+                    <TextAlign>Right</TextAlign>
+                  </Style>
+                </Paragraph>
+              </Paragraphs>
+              <Top>0.03528cm</Top>
+              <Left>15.04708cm</Left>
+              <Height>0.423cm</Height>
+              <Width>3.15cm</Width>
+              <ZIndex>3</ZIndex>
+              <Style>
+                <VerticalAlign>Middle</VerticalAlign>
+              </Style>
+            </Textbox>
+            <Textbox Name="COMPANYNAME2">
+              <KeepTogether>true</KeepTogether>
+              <Paragraphs>
+                <Paragraph>
+                  <TextRuns>
+                    <TextRun>
+                      <Value>=First(Fields!Title.Value, "DataSet_Result")</Value>
+                      <Style>
+                        <FontSize>8pt</FontSize>
+                        <FontWeight>Bold</FontWeight>
+                      </Style>
+                    </TextRun>
+                  </TextRuns>
+                  <Style />
+                </Paragraph>
+              </Paragraphs>
+              <Height>0.423cm</Height>
+              <Width>7.5cm</Width>
+              <ZIndex>4</ZIndex>
+              <Style>
+                <Border>
+                  <Style>None</Style>
+                </Border>
+                <VerticalAlign>Middle</VerticalAlign>
+              </Style>
+            </Textbox>
+            <Textbox Name="UserIdTextBox2">
+              <KeepTogether>true</KeepTogether>
+              <Paragraphs>
+                <Paragraph>
+                  <TextRuns>
+                    <TextRun>
+                      <Value>=First(Fields!PageNoCaption.Value, "DataSet_Result")</Value>
+                      <Style>
+                        <FontSize>7pt</FontSize>
+                      </Style>
+                    </TextRun>
+                  </TextRuns>
+                  <Style>
+                    <TextAlign>Right</TextAlign>
+                  </Style>
+                </Paragraph>
+              </Paragraphs>
+              <Top>0.49356cm</Top>
+              <Left>16.59597cm</Left>
+              <Height>0.423cm</Height>
+              <Width>0.78056cm</Width>
+              <ZIndex>5</ZIndex>
+              <DataElementOutput>NoOutput</DataElementOutput>
+              <Style>
+                <Border>
+                  <Style>None</Style>
+                </Border>
+                <VerticalAlign>Middle</VerticalAlign>
+              </Style>
+            </Textbox>
+          </ReportItems>
+          <Style>
+            <Border>
+              <Style>None</Style>
+            </Border>
+          </Style>
+        </PageHeader>
+        <PageHeight>29cm</PageHeight>
+        <PageWidth>19cm</PageWidth>
+        <LeftMargin>0.5cm</LeftMargin>
+        <Style />
+      </Page>
+    </ReportSection>
+  </ReportSections>
+  <ReportParameters>
+    <ReportParameter Name="DateCaption">
+      <DataType>String</DataType>
+      <DefaultValue>
+        <Values>
+          <Value>DateCaption</Value>
+        </Values>
+      </DefaultValue>
+      <Prompt>DateCaption</Prompt>
+    </ReportParameter>
+  </ReportParameters>
+  <ReportParametersLayout>
+    <GridLayoutDefinition>
+      <NumberOfColumns>1</NumberOfColumns>
+      <NumberOfRows>1</NumberOfRows>
+      <CellDefinitions>
+        <CellDefinition>
+          <ColumnIndex>0</ColumnIndex>
+          <RowIndex>0</RowIndex>
+          <ParameterName>DateCaption</ParameterName>
+        </CellDefinition>
+      </CellDefinitions>
+    </GridLayoutDefinition>
+  </ReportParametersLayout>
+  <Code>Public Function BlankZero(ByVal Value As Decimal)
+    if Value = 0 then
+        Return ""
+    end if
+    Return Value
+End Function
+
+Public Function BlankPos(ByVal Value As Decimal)
+    if Value &gt; 0 then
+        Return ""
+    end if
+    Return Value
+End Function
+
+Public Function BlankZeroAndPos(ByVal Value As Decimal)
+    if Value &gt;= 0 then
+        Return ""
+    end if
+    Return Value
+End Function
+
+Public Function BlankNeg(ByVal Value As Decimal)
+    if Value &lt; 0 then
+        Return ""
+    end if
+    Return Value
+End Function
+
+Public Function BlankNegAndZero(ByVal Value As Decimal)
+    if Value &lt;= 0 then
+        Return ""
+    end if
+    Return Value
+End Function
+</Code>
+  <Language>=User!Language</Language>
+  <ConsumeContainerWhitespace>true</ConsumeContainerWhitespace>
+  <rd:ReportUnitType>Inch</rd:ReportUnitType>
+</Report>
+    END_OF_RDLDATA
+  }
+}
+
+OBJECT Codeunit 7014450 <JournalName> Journal Mgt.
+{
+  OBJECT-PROPERTIES
+  {
+    Date=30/09/20;
+    Time=12:00:00;
+    Modified=Yes;
+    Version List=DIAES14.00;
+  }
+  PROPERTIES
+  {
+    Permissions=TableData 206=imd,
+                TableData 236=imd;
+    OnRun=BEGIN
+          END;
+
+  }
+  CODE
+  {
+    VAR
+      Text000@1000 : TextConst 'ENU=RESOURCES;ESP=pagos cosecha';
+      Text001@1001 : TextConst 'ENU=Resource Journals;ESP=Diarios de pagos cosecha';
+      Text002@1002 : TextConst 'ENU=RECURRING;ESP=PERIODICO';
+      Text003@1003 : TextConst 'ENU=Recurring Resource Journal;ESP=Diario peri¢dico pagos cosecha';
+      Text004@1004 : TextConst 'ENU=DEFAULT;ESP=GENERICO';
+      Text005@1005 : TextConst 'ENU=Default Journal;ESP=Diario gen‚rico';
+      OldNoJournalNameJnl@1006 : Code[20];
+      OpenFromBatch@1007 : Boolean;
+      Error001@1170170001 : TextConst 'ESP=El N§ contacto relacionado s¢lo se puede rellenar en acciones imputables a cliente.';
+      Error002@1170170000 : TextConst 'ESP=Antes de elegir el contacto relacionado se debe rellenar el campo N§';
+
+    PROCEDURE SelectTemplate@1(IDPagina@1004 : Integer;VAR LineaDiario@1003 : Record 7014452;VAR DiarioSeleccionado@1002 : Boolean);
+    VAR
+      LibroDiario@1001 : Record 7014450;
+    BEGIN
+      DiarioSeleccionado := TRUE;
+
+      LibroDiario.RESET;
+      LibroDiario.SETRANGE("Page ID",IDPagina);
+
+      CASE LibroDiario.COUNT OF
+        0:
+          BEGIN
+            LibroDiario.INIT;
+            LibroDiario.Name := Text000;
+            LibroDiario.Description := Text001;
+            LibroDiario.VALIDATE("Page ID",IDPagina);
+            LibroDiario.INSERT;
+            COMMIT;
+          END;
+        1:
+          LibroDiario.FINDFIRST;
+        ELSE
+          DiarioSeleccionado := PAGE.RUNMODAL(0,LibroDiario) = ACTION::LookupOK;
+      END;
+      IF DiarioSeleccionado THEN BEGIN
+        LineaDiario.FILTERGROUP := 2;
+        LineaDiario.SETRANGE("Journal Template Name",LibroDiario.Name);
+        LineaDiario.FILTERGROUP := 0;
+        IF OpenFromBatch THEN BEGIN
+          LineaDiario."Journal Template Name" := '';
+          PAGE.RUN(LibroDiario."Page ID",LineaDiario);
+        END;
+      END;
+    END;
+
+    PROCEDURE SelectTemplateFromBatch@10(VAR SeccionDiario@1000 : Record 7014451);
+    VAR
+      LineaDiario@1002 : Record 7014452;
+      LibroDiario@1003 : Record 7014450;
+    BEGIN
+      OpenFromBatch := TRUE;
+      LibroDiario.GET(SeccionDiario."Journal Template Name");
+      LibroDiario.TESTFIELD("Page ID");
+      SeccionDiario.TESTFIELD(Name);
+
+      LineaDiario.FILTERGROUP := 2;
+      LineaDiario.SETRANGE("Journal Template Name",LibroDiario.Name);
+      LineaDiario.FILTERGROUP := 0;
+
+      LineaDiario."Journal Template Name" := '';
+      LineaDiario."Journal Batch Name" := SeccionDiario.Name;
+      PAGE.RUN(LibroDiario."Page ID",LineaDiario);
+    END;
+
+    PROCEDURE OpenJournal@2(VAR SeccionActual@1000 : Code[10];VAR LineaDiario@1001 : Record 7014452);
+    BEGIN
+      CheckJournalTemplate(LineaDiario.GETRANGEMAX("Journal Template Name"),SeccionActual);
+      LineaDiario.FILTERGROUP := 2;
+      LineaDiario.SETRANGE("Journal Batch Name",SeccionActual);
+      LineaDiario.FILTERGROUP := 0;
+    END;
+
+    PROCEDURE OpenBatch@12(VAR SeccionDiario@1000 : Record 7014451);
+    VAR
+      LibroDiario@1002 : Record 7014450;
+      LineaDiario@1004 : Record 7014452;
+      DiarioSeleccionado@1003 : Boolean;
+    BEGIN
+      IF SeccionDiario.GETFILTER("Journal Template Name") <> '' THEN
+        EXIT;
+      SeccionDiario.FILTERGROUP(2);
+      IF SeccionDiario.GETFILTER("Journal Template Name") <> '' THEN BEGIN
+        SeccionDiario.FILTERGROUP(0);
+        EXIT;
+      END;
+      SeccionDiario.FILTERGROUP(0);
+
+      IF NOT SeccionDiario.FIND('-') THEN BEGIN
+        IF NOT LibroDiario.FINDFIRST THEN
+          SelectTemplate(0,LineaDiario,DiarioSeleccionado);
+        IF LibroDiario.FINDFIRST THEN
+          CheckJournalTemplate(LibroDiario.Name,SeccionDiario.Name);
+        SelectTemplate(0,LineaDiario,DiarioSeleccionado);
+        IF LibroDiario.FINDFIRST THEN
+          CheckJournalTemplate(LibroDiario.Name,SeccionDiario.Name);
+      END;
+      SeccionDiario.FIND('-');
+      DiarioSeleccionado := TRUE;
+      IF SeccionDiario.GETFILTER("Journal Template Name") <> '' THEN
+        LibroDiario.SETRANGE(Name,SeccionDiario.GETFILTER("Journal Template Name"));
+      CASE LibroDiario.COUNT OF
+        1:
+          LibroDiario.FINDFIRST;
+        ELSE
+          DiarioSeleccionado := PAGE.RUNMODAL(0,LibroDiario) = ACTION::LookupOK;
+      END;
+      IF NOT DiarioSeleccionado THEN
+        ERROR('');
+
+      SeccionDiario.FILTERGROUP(2);
+      SeccionDiario.SETRANGE("Journal Template Name",LibroDiario.Name);
+      SeccionDiario.FILTERGROUP(0);
+    END;
+
+    PROCEDURE CheckJournalTemplate@3(LibroActual@1000 : Code[10];VAR SeccionActual@1001 : Code[10]);
+    VAR
+      SeccionDiario@1002 : Record 7014451;
+    BEGIN
+      SeccionDiario.SETRANGE("Journal Template Name",LibroActual);
+      IF NOT SeccionDiario.GET(LibroActual,SeccionActual) THEN BEGIN
+        IF NOT SeccionDiario.FINDFIRST THEN BEGIN
+          SeccionDiario.INIT;
+          SeccionDiario."Journal Template Name" := LibroActual;
+          SeccionDiario.SetupNewJournalBatch;
+          SeccionDiario.Name := Text004;
+          SeccionDiario.Description := Text005;
+          SeccionDiario.INSERT(TRUE);
+          COMMIT;
+        END;
+        SeccionActual := SeccionDiario.Name;
+      END;
+    END;
+
+    PROCEDURE CheckName@4(SeccionActual@1000 : Code[10];VAR LineaDiario@1001 : Record 7014452);
+    VAR
+      SeccionDiario@1002 : Record 7014451;
+    BEGIN
+      SeccionDiario.GET(LineaDiario.GETRANGEMAX("Journal Template Name"),SeccionActual);
+    END;
+
+    PROCEDURE SetName@5(SeccionActual@1000 : Code[10];VAR LineaDiario@1001 : Record 7014452);
+    BEGIN
+      LineaDiario.FILTERGROUP := 2;
+      LineaDiario.SETRANGE("Journal Batch Name",SeccionActual);
+      LineaDiario.FILTERGROUP := 0;
+      IF LineaDiario.FIND('-') THEN;
+    END;
+
+    PROCEDURE LookupNombre@6(VAR SeccionActual@1000 : Code[10];VAR LineaDiario@1001 : Record 7014452) : Boolean;
+    VAR
+      SeccionDiario@1002 : Record 7014451;
+    BEGIN
+      COMMIT;
+      SeccionDiario."Journal Template Name" := LineaDiario.GETRANGEMAX("Journal Template Name");
+      SeccionDiario.Name := LineaDiario.GETRANGEMAX("Journal Batch Name");
+      SeccionDiario.FILTERGROUP(2);
+      SeccionDiario.SETRANGE("Journal Template Name",SeccionDiario."Journal Template Name");
+      SeccionDiario.FILTERGROUP(0);
+      IF PAGE.RUNMODAL(0,SeccionDiario) = ACTION::LookupOK THEN BEGIN
+        SeccionActual := SeccionDiario.Name;
+        SetName(SeccionActual,LineaDiario);
+      END;
+    END;
+
+    PROCEDURE GetJournal@7(NoNombreDiario@1000 : Code[20];VAR NombreNombreDiario@1001 : Text[50]);
+    VAR
+      NombreDiario@1002 : Record 7014450;
+    BEGIN
+      IF NoNombreDiario <> OldNoJournalNameJnl THEN BEGIN
+        NombreNombreDiario := '';
+        IF NoNombreDiario <> '' THEN
+          IF NombreDiario.GET(NoNombreDiario) THEN
+            NombreNombreDiario := NombreDiario.Name;
+        OldNoJournalNameJnl := NoNombreDiario;
+      END;
+    END;
+
+    PROCEDURE PrintJournalBatch@19(SeccionDiario@1000 : Record 7014451);
+    VAR
+      LibroDiario@1170170000 : Record 7014450;
+    BEGIN
+      SeccionDiario.SETRECFILTER;
+      LibroDiario.GET(SeccionDiario."Journal Template Name");
+      LibroDiario.TESTFIELD("Test Report ID");
+      REPORT.RUN(LibroDiario."Test Report ID",TRUE,FALSE,SeccionDiario);
+    END;
+
+    PROCEDURE PrintJournalLine@20(VAR LineaDiario@1000 : Record 7014452);
+    VAR
+      NewLineaDiario@1170170000 : Record 7014452;
+      LibroDiario@1170170001 : Record 7014450;
+    BEGIN
+      LineaDiario.COPY(NewLineaDiario);
+      LineaDiario.SETRANGE("Journal Template Name",LineaDiario."Journal Template Name");
+      LineaDiario.SETRANGE("Journal Batch Name",LineaDiario."Journal Batch Name");
+      LibroDiario.GET(LineaDiario."Journal Template Name");
+      LibroDiario.TESTFIELD("Test Report ID");
+      REPORT.RUN(LibroDiario."Test Report ID",TRUE,FALSE,LineaDiario);
+    END;
+
+    BEGIN
+    END.
+  }
+}
+
+OBJECT Codeunit 7014451 <JournalName> Jnl.-Check Line
+{
+  OBJECT-PROPERTIES
+  {
+    Date=30/09/20;
+    Time=12:00:00;
+    Modified=Yes;
+    Version List=DIAES14.00;
+  }
+  PROPERTIES
+  {
+    TableNo=7014452;
+    OnRun=BEGIN
+            GLSetup.GET;
+            RunCheck(Rec);
+          END;
+
+  }
+  CODE
+  {
+    VAR
+      Text000@1000 : TextConst 'ENU=cannot be a closing date;ESP=no puede ser una fecha £ltima';
+      Text001@1001 : TextConst 'ENU=is not within your range of allowed posting dates;ESP=no est  dentro del periodo de fechas de registro permitidas';
+      Text002@1002 : TextConst 'ENU=The combination of dimensions used in %1 %2, %3, %4 is blocked. %5;ESP=La combin. de dimensiones utilizada en %1 %2, %3, %4 est  bloq. %5';
+      Text003@1003 : TextConst 'ENU=A dimension used in %1 %2, %3, %4 has caused an error. %5;ESP=La dimensi¢n util. en %1 %2, %3, %4 ha causado error. %5';
+      GLSetup@1004 : Record 98;
+      UserSetup@1005 : Record 91;
+      DimMgt@1007 : Codeunit 408;
+      TimeSheetMgt@1006 : Codeunit 950;
+      AllowPostingFrom@1008 : Date;
+      AllowPostingTo@1009 : Date;
+
+    PROCEDURE RunCheck@1(VAR JournalNameJournalLine@1000 : Record 7014452);
+    VAR
+      TableID@1002 : ARRAY [10] OF Integer;
+      No@1003 : ARRAY [10] OF Code[20];
+    BEGIN
+      WITH JournalNameJournalLine DO BEGIN
+        IF EmptyLine THEN
+          EXIT;
+
+        TESTFIELD("Posting Date");
+
+        IF "Posting Date" <> NORMALDATE("Posting Date") THEN
+          FIELDERROR("Posting Date",Text000);
+
+        IF (AllowPostingFrom = 0D) AND (AllowPostingTo = 0D) THEN BEGIN
+          IF USERID <> '' THEN
+            IF UserSetup.GET(USERID) THEN BEGIN
+              AllowPostingFrom := UserSetup."Allow Posting From";
+              AllowPostingTo := UserSetup."Allow Posting To";
+            END;
+          IF (AllowPostingFrom = 0D) AND (AllowPostingTo = 0D) THEN BEGIN
+            GLSetup.GET;
+            AllowPostingFrom := GLSetup."Allow Posting From";
+            AllowPostingTo := GLSetup."Allow Posting To";
+          END;
+          IF AllowPostingTo = 0D THEN
+            AllowPostingTo := 31129999D;
+        END;
+        IF ("Posting Date" < AllowPostingFrom) OR ("Posting Date" > AllowPostingTo) THEN
+          FIELDERROR("Posting Date",Text001);
+
+        IF "Posting Date" <> 0D THEN
+          IF "Posting Date" <> NORMALDATE("Posting Date") THEN
+            FIELDERROR("Posting Date",Text000);
+
+        IF NOT DimMgt.CheckDimIDComb("Dimension Set ID") THEN
+          ERROR(
+            Text002,
+            TABLECAPTION,"Journal Template Name","Journal Batch Name","Line No.",
+            DimMgt.GetDimCombErr);
+      END;
+    END;
+
+    BEGIN
+    END.
+  }
+}
+
+OBJECT Codeunit 7014452 <JournalName> Jnl.-Post Line
+{
+  OBJECT-PROPERTIES
+  {
+    Date=30/09/20;
+    Time=12:00:00;
+    Modified=Yes;
+    Version List=DIAES14.00;
+  }
+  PROPERTIES
+  {
+    TableNo=7014452;
+    OnRun=BEGIN
+            RunWithCheck(Rec);
+          END;
+
+  }
+  CODE
+  {
+    VAR
+      JournalNameJournalLine@1000 : Record 7014452;
+      JournalNameJnlCheckLine@1006 : Codeunit 7014451;
+      NextEntryNo@1170170001 : Integer;
+
+    PROCEDURE RunWithCheck@3(VAR JournalNameJournalLine2@1000 : Record 7014452);
+    BEGIN
+      JournalNameJournalLine.COPY(JournalNameJournalLine2);
+      Code;
+      JournalNameJournalLine2 := JournalNameJournalLine;
+    END;
+
+    LOCAL PROCEDURE Code@1();
+    BEGIN
+      WITH JournalNameJournalLine DO BEGIN
+        IF EmptyLine THEN
+          EXIT;
+        JournalNameJnlCheckLine.RunCheck(JournalNameJournalLine);
+        CreateJournalNameEntry;
+      END;
+    END;
+
+    LOCAL PROCEDURE CreateJournalNameEntry@1170170010();
+    VAR
+      JournalNameEntry@1170170000 : Record 7014453;
+    BEGIN
+      WITH JournalNameEntry DO BEGIN
+        NextEntryNo := FindNextEntryNo;
+        INIT;
+        "Entry No." := NextEntryNo;
+        "Journal Batch Name" := JournalNameJournalLine."Journal Batch Name";
+        "Posting Date" := JournalNameJournalLine."Posting Date";
+        "Document No." := JournalNameJournalLine."Document No.";
+        Description := JournalNameJournalLine.Description;
+        "Posting No. Series" := JournalNameJournalLine."Posting No. Series";
+        "Shortcut Dimension 1 Code" := JournalNameJournalLine."Shortcut Dimension 1 Code";
+        "Shortcut Dimension 2 Code" := JournalNameJournalLine."Shortcut Dimension 2 Code";
+        "Dimension Set ID" := JournalNameJournalLine."Dimension Set ID";
+        "Source Code" := JournalNameJournalLine."Source Code";
+        "Reason Code" := JournalNameJournalLine."Reason Code";
+        INSERT;
+        NextEntryNo := NextEntryNo + 1;
+      END;
+    END;
+
+    LOCAL PROCEDURE FindNextEntryNo@1170170013() NextEntryNo : Integer;
+    VAR
+      JournalNameEntry@1170170000 : Record 7014453;
+    BEGIN
+      IF NextEntryNo = 0 THEN BEGIN
+        JournalNameEntry.LOCKTABLE;
+        IF JournalNameEntry.FINDLAST THEN
+          NextEntryNo := JournalNameEntry."Entry No.";
+        NextEntryNo := NextEntryNo + 1;
+      END;
+    END;
+
+    BEGIN
+    END.
+  }
+}
+
+OBJECT Codeunit 7014453 <JournalName> Jnl.-Post Batch
+{
+  OBJECT-PROPERTIES
+  {
+    Date=30/09/20;
+    Time=12:00:00;
+    Modified=Yes;
+    Version List=DIAES14.00;
+  }
+  PROPERTIES
+  {
+    TableNo=7014452;
+    OnRun=BEGIN
+            JournalNameJournalLine.COPY(Rec);
+            Code;
+            Rec := JournalNameJournalLine;
+          END;
+
+  }
+  CODE
+  {
+    VAR
+      Text000@1000 : TextConst 'ENU=cannot exceed %1 characters;ESP=no puede superar %1 caracteres';
+      Text001@1001 : TextConst 'ENU=Journal Batch Name    #1##########\\;ESP=Nombre secci¢n diario #1##########\\';
+      Text002@1002 : TextConst 'ENU=Checking lines        #2######\;ESP=Comprobando l¡neas    #2######\';
+      Text003@1003 : TextConst 'ENU=Posting lines         #3###### @4@@@@@@@@@@@@@\;ESP=Registrando l¡neas    #3###### @4@@@@@@@@@@@@@\';
+      Text004@1004 : TextConst 'ENU=Updating lines        #5###### @6@@@@@@@@@@@@@;ESP=Actualizando l¡ns.    #5###### @6@@@@@@@@@@@@@';
+      Text005@1005 : TextConst 'ENU=Posting lines         #3###### @4@@@@@@@@@@@@@;ESP=Registrando l¡neas    #3###### @4@@@@@@@@@@@@@';
+      Text006@1006 : TextConst 'ENU=A maximum of %1 posting number series can be used in each journal.;ESP=Se puede utilizar un m ximo de %1 n£meros de serie de registro en cada diario.';
+      Text007@1007 : TextConst 'ENU=<Month Text>;ESP=<Month Text>';
+      JournalNameJournalTemplate@1008 : Record 7014450;
+      JournalNameJournalBatch@1009 : Record 7014451;
+      JournalNameJournalLine@1010 : Record 7014452;
+      JournalNameJournalLine2@1011 : Record 7014452;
+      JournalNameJournalLine3@1012 : Record 7014452;
+      JournalNameEntry@1014 : Record 7014453;
+      NoSeries@1016 : TEMPORARY Record 308;
+      JournalNameJnlCheckLine@1017 : Codeunit 7014451;
+      JournalNameJnlPostLine@1018 : Codeunit 7014452;
+      NoSeriesMgt@1019 : Codeunit 396;
+      NoSeriesMgt2@1020 : ARRAY [10] OF Codeunit 396;
+      Window@1022 : Dialog;
+      StartLineNo@1024 : Integer;
+      Day@1025 : Integer;
+      Week@1026 : Integer;
+      Month@1027 : Integer;
+      MonthText@1028 : Text[30];
+      AccountingPeriod@1029 : Record 50;
+      LineCount@1030 : Integer;
+      NoOfRecords@1031 : Integer;
+      LastDocNo@1032 : Code[20];
+      LastDocNo2@1033 : Code[20];
+      LastPostedDocNo@1034 : Code[20];
+      NoOfPostingNoSeries@1035 : Integer;
+      PostingNoSeriesNo@1036 : Integer;
+
+    LOCAL PROCEDURE Code@1();
+    BEGIN
+      WITH JournalNameJournalLine DO BEGIN
+        SETRANGE("Journal Template Name","Journal Template Name");
+        SETRANGE("Journal Batch Name","Journal Batch Name");
+        LOCKTABLE;
+
+        JournalNameJournalTemplate.GET("Journal Template Name");
+        JournalNameJournalBatch.GET("Journal Template Name","Journal Batch Name");
+        IF STRLEN(INCSTR(JournalNameJournalBatch.Name)) > MAXSTRLEN(JournalNameJournalBatch.Name) THEN
+          JournalNameJournalBatch.FIELDERROR(
+            Name,
+            STRSUBSTNO(
+              Text000,
+              MAXSTRLEN(JournalNameJournalBatch.Name)));
+
+        IF NOT FIND('=><') THEN BEGIN
+          "Line No." := 0;
+          COMMIT;
+          EXIT;
+        END;
+
+        Window.OPEN(
+          Text001 +
+          Text002 +
+          Text005);
+        Window.UPDATE(1,"Journal Batch Name");
+
+        // Check lines
+        LineCount := 0;
+        StartLineNo := "Line No.";
+        REPEAT
+          LineCount := LineCount + 1;
+          Window.UPDATE(2,LineCount);
+          JournalNameJnlCheckLine.RunCheck(JournalNameJournalLine);
+          IF NEXT = 0 THEN
+            FIND('-');
+        UNTIL "Line No." = StartLineNo;
+        NoOfRecords := LineCount;
+
+        // Find next register no.
+        JournalNameEntry.LOCKTABLE;
+        IF JournalNameEntry.FIND('+') THEN;
+
+        // Post lines
+        LineCount := 0;
+        LastDocNo := '';
+        LastDocNo2 := '';
+        LastPostedDocNo := '';
+        FINDSET;
+        REPEAT
+          LineCount := LineCount + 1;
+          Window.UPDATE(3,LineCount);
+          Window.UPDATE(4,ROUND(LineCount / NoOfRecords * 10000,1));
+          IF NOT EmptyLine AND
+             (JournalNameJournalBatch."No. Series" <> '') AND
+             ("Document No." <> LastDocNo2)
+          THEN
+            TESTFIELD("Document No.",NoSeriesMgt.GetNextNo(JournalNameJournalBatch."No. Series","Posting Date",FALSE));
+          IF NOT EmptyLine THEN
+            LastDocNo2 := "Document No.";
+          IF "Posting No. Series" = '' THEN
+            "Posting No. Series" := JournalNameJournalBatch."No. Series"
+          ELSE
+            IF NOT EmptyLine THEN
+              IF ("Document No." = LastDocNo) AND ("Document No." <> '') THEN
+                "Document No." := LastPostedDocNo
+              ELSE BEGIN
+                IF NOT NoSeries.GET("Posting No. Series") THEN BEGIN
+                  NoOfPostingNoSeries := NoOfPostingNoSeries + 1;
+                  IF NoOfPostingNoSeries > ARRAYLEN(NoSeriesMgt2) THEN
+                    ERROR(
+                      Text006,
+                      ARRAYLEN(NoSeriesMgt2));
+                  NoSeries.Code := "Posting No. Series";
+                  NoSeries.Description := FORMAT(NoOfPostingNoSeries);
+                  NoSeries.INSERT;
+                END;
+                LastDocNo := "Document No.";
+                EVALUATE(PostingNoSeriesNo,NoSeries.Description);
+                "Document No." := NoSeriesMgt2[PostingNoSeriesNo].GetNextNo("Posting No. Series","Posting Date",FALSE);
+                LastPostedDocNo := "Document No.";
+              END;
+          JournalNameJnlPostLine.RunWithCheck(JournalNameJournalLine);
+        UNTIL NEXT = 0;
+
+        INIT;
+
+        // Update/delete lines
+        JournalNameJournalLine2.COPYFILTERS(JournalNameJournalLine);
+        IF JournalNameJournalLine2.FIND('+') THEN; // Remember the last line
+        JournalNameJournalLine3.COPY(JournalNameJournalLine);
+        JournalNameJournalLine3.DELETEALL;
+        JournalNameJournalLine3.RESET;
+        JournalNameJournalLine3.SETRANGE("Journal Template Name","Journal Template Name");
+        JournalNameJournalLine3.SETRANGE("Journal Batch Name","Journal Batch Name");
+        IF NOT JournalNameJournalLine3.FINDLAST THEN
+          IF INCSTR("Journal Batch Name") <> '' THEN BEGIN
+            JournalNameJournalBatch.DELETE;
+            JournalNameJournalBatch.Name := INCSTR("Journal Batch Name");
+            IF JournalNameJournalBatch.INSERT THEN;
+            "Journal Batch Name" := JournalNameJournalBatch.Name;
+          END;
+
+        JournalNameJournalLine3.SETRANGE("Journal Batch Name","Journal Batch Name");
+        IF (JournalNameJournalBatch."No. Series" = '') AND NOT JournalNameJournalLine3.FINDLAST THEN BEGIN
+          JournalNameJournalLine3.INIT;
+          JournalNameJournalLine3."Journal Template Name" := "Journal Template Name";
+          JournalNameJournalLine3."Journal Batch Name" := "Journal Batch Name";
+          JournalNameJournalLine3."Line No." := 10000;
+          JournalNameJournalLine3.INSERT;
+          JournalNameJournalLine3.SetupNewLine(JournalNameJournalLine2);
+          JournalNameJournalLine3.MODIFY;
+        END;
+        IF JournalNameJournalBatch."No. Series" <> '' THEN
+          NoSeriesMgt.SaveNoSeries;
+        IF NoSeries.FIND('-') THEN
+          REPEAT
+            EVALUATE(PostingNoSeriesNo,NoSeries.Description);
+            NoSeriesMgt2[PostingNoSeriesNo].SaveNoSeries;
+          UNTIL NoSeries.NEXT = 0;
+
+        COMMIT;
+      END;
+      COMMIT;
+    END;
+
+    BEGIN
+    END.
+  }
+}
+
+OBJECT Codeunit 7014454 <JournalName> Journal-Post
+{
+  OBJECT-PROPERTIES
+  {
+    Date=30/09/20;
+    Time=12:00:00;
+    Modified=Yes;
+    Version List=DIAES14.00;
+  }
+  PROPERTIES
+  {
+    TableNo=7014452;
+    OnRun=BEGIN
+            JournalNameJournalLine.COPY(Rec);
+            Code;
+            COPY(JournalNameJournalLine);
+          END;
+
+  }
+  CODE
+  {
+    VAR
+      Text000@1000 : TextConst 'ENU=cannot be filtered when posting recurring journals;ESP=no puede contener un filtro cuando se registra un diario peri¢dico';
+      Text001@1001 : TextConst 'ENU=Do you want to post the journal lines?;ESP=¨Confirma que desea registrar las l¡neas del diario?';
+      Text002@1002 : TextConst 'ENU=There is nothing to post.;ESP=No hay nada que registrar.';
+      Text003@1003 : TextConst 'ENU=The journal lines were successfully posted.;ESP=Se han registrado correctamente las l¡neas del diario.';
+      Text004@1004 : TextConst 'ENU="The journal lines were successfully posted. ";ESP="Se han registrado correctamente las l¡neas del diario. "';
+      Text005@1005 : TextConst 'ENU=You are now in the %1 journal.;ESP=Se encuentra en el diario %1.';
+      JournalNameJournalTemplate@1006 : Record 7014450;
+      JournalNameJournalLine@1007 : Record 7014452;
+      JournalNameJnlPostBatch@1008 : Codeunit 7014453;
+      TempJournalBatch@1009 : Code[10];
+
+    LOCAL PROCEDURE Code@1();
+    BEGIN
+      WITH JournalNameJournalLine DO BEGIN
+        JournalNameJournalTemplate.GET("Journal Template Name");
+
+        IF NOT CONFIRM(Text001) THEN
+          EXIT;
+
+        TempJournalBatch := "Journal Batch Name";
+
+        JournalNameJnlPostBatch.RUN(JournalNameJournalLine);
+
+        IF "Line No." = 0 THEN
+          MESSAGE(Text002)
+        ELSE
+          IF TempJournalBatch = "Journal Batch Name" THEN
+            MESSAGE(Text003)
+          ELSE
+            MESSAGE(
+              Text004 +
+              Text005,
+              "Journal Batch Name");
+
+        IF NOT FIND('=><') OR (TempJournalBatch <> "Journal Batch Name") THEN BEGIN
+          RESET;
+          FILTERGROUP(2);
+          SETRANGE("Journal Template Name","Journal Template Name");
+          SETRANGE("Journal Batch Name","Journal Batch Name");
+          FILTERGROUP(0);
+          "Line No." := 1;
+        END;
+      END;
+    END;
+
+    BEGIN
+    END.
+  }
+}
+
+OBJECT Codeunit 7014455 <JournalName> Jnl.-Post+Print
+{
+  OBJECT-PROPERTIES
+  {
+    Date=30/09/20;
+    Time=12:00:00;
+    Modified=Yes;
+    Version List=DIAES14.00;
+  }
+  PROPERTIES
+  {
+    TableNo=7014452;
+    OnRun=BEGIN
+            JournalNameJournalLine.COPY(Rec);
+            Code;
+            COPY(JournalNameJournalLine);
+          END;
+
+  }
+  CODE
+  {
+    VAR
+      Text000@1000 : TextConst 'ENU=cannot be filtered when posting recurring journals;ESP=no puede contener un filtro cuando se registra un diario peri¢dico';
+      Text001@1001 : TextConst 'ENU=Do you want to post the journal lines and print the posting report?;ESP=¨Confirma que desea registrar las l¡ns. de diario e imprimir el informe de reg.?';
+      Text002@1002 : TextConst 'ENU=There is nothing to post.;ESP=No hay nada que registrar.';
+      Text003@1003 : TextConst 'ENU=The journal lines were successfully posted.;ESP=Se han registrado correctamente las l¡neas del diario.';
+      Text004@1004 : TextConst 'ENU="The journal lines were successfully posted. ";ESP="Se han registrado correctamente las l¡neas del diario. "';
+      Text005@1005 : TextConst 'ENU=You are now in the %1 journal.;ESP=Se encuentra en el diario %1.';
+      JournalNameJournalTemplate@1006 : Record 7014450;
+      JournalNameJournalLine@1007 : Record 7014452;
+      JournalNameJnlPostBatch@1009 : Codeunit 7014453;
+      TempJournalBatch@1010 : Code[10];
+
+    LOCAL PROCEDURE Code@1();
+    BEGIN
+      WITH JournalNameJournalLine DO BEGIN
+        JournalNameJournalTemplate.GET("Journal Template Name");
+        JournalNameJournalTemplate.TESTFIELD("Posting Report ID");
+
+        IF NOT CONFIRM(Text001) THEN
+          EXIT;
+
+        TempJournalBatch := "Journal Batch Name";
+
+        JournalNameJnlPostBatch.RUN(JournalNameJournalLine);
+
+        REPORT.RUN(JournalNameJournalTemplate."Posting Report ID",FALSE,FALSE);
+
+        IF "Line No." = 0 THEN
+          MESSAGE(Text002)
+        ELSE
+          IF TempJournalBatch = "Journal Batch Name" THEN
+            MESSAGE(Text003)
+          ELSE
+            MESSAGE(
+              Text004 +
+              Text005,
+              "Journal Batch Name");
+
+        IF NOT FIND('=><') OR (TempJournalBatch <> "Journal Batch Name") THEN BEGIN
+          RESET;
+          FILTERGROUP(2);
+          SETRANGE("Journal Template Name","Journal Template Name");
+          SETRANGE("Journal Batch Name","Journal Batch Name");
+          FILTERGROUP(0);
+          "Line No." := 1;
+        END;
+      END;
+    END;
+
+    BEGIN
+    END.
+  }
+}
+
+OBJECT Codeunit 7014900 Test <JournalName> Journal
+{
+  OBJECT-PROPERTIES
+  {
+    Date=30/09/20;
+    Time=12:00:00;
+    Modified=Yes;
+    Version List=DIAES14.00,Test;
+  }
+  PROPERTIES
+  {
+    Subtype=Test;
+    OnRun=BEGIN
+          END;
+
+  }
+  CODE
+  {
+    VAR
+      LibraryJournalNameJournal@1170170000 : Codeunit 7014901;
+
+    [Test]
+    PROCEDURE PostJournalNameJournalLine@1170170002();
+    VAR
+      JournalNameJournalLine@1170170000 : Record 7014452;
+    BEGIN
+      // Given
+      LibraryJournalNameJournal.CreateJournalNameJournalLine(JournalNameJournalLine);
+
+      // When
+      LibraryJournalNameJournal.PostJournalNameJournalLine(JournalNameJournalLine);
+
+      // Then
+      TestJournalNameEntry(JournalNameJournalLine);
+    END;
+
+    [Test]
+    PROCEDURE PostJournalNameJournalLineWithDimensions@1170170000();
+    VAR
+      JournalNameJournalLine@1170170000 : Record 7014452;
+    BEGIN
+      // Given
+      LibraryJournalNameJournal.CreateJournalNameJournalLineWithDimensions(JournalNameJournalLine);
+
+      // When
+      LibraryJournalNameJournal.PostJournalNameJournalLine(JournalNameJournalLine);
+
+      // Then
+      TestJournalNameEntry(JournalNameJournalLine);
+    END;
+
+    [Test]
+    PROCEDURE PostJournalNameJournalLineWithNoSeries@1170170001();
+    VAR
+      JournalNameJournalLine@1170170000 : Record 7014452;
+    BEGIN
+      // Given
+      LibraryJournalNameJournal.CreateJournalNameJournalLineWithPostingNoSeries(JournalNameJournalLine);
+
+      // When
+      LibraryJournalNameJournal.PostJournalNameJournalLine(JournalNameJournalLine);
+
+      // Then
+      TestJournalNameEntry(JournalNameJournalLine);
+    END;
+
+    LOCAL PROCEDURE TestJournalNameEntry@1170170004(JournalNameJournalLine@1170170000 : Record 7014452);
+    VAR
+      JournalNameEntry@1170170001 : Record 7014453;
+    BEGIN
+      WITH JournalNameEntry DO BEGIN
+        FINDLAST;
+        TESTFIELD("Journal Batch Name",JournalNameJournalLine."Journal Batch Name");
+        TESTFIELD("Posting Date",JournalNameJournalLine."Posting Date");
+        TESTFIELD("Document No.",JournalNameJournalLine."Document No.");
+        TESTFIELD(Description,JournalNameJournalLine.Description);
+        TESTFIELD("Posting No. Series",JournalNameJournalLine."Posting No. Series");
+        TESTFIELD("Source Code",JournalNameJournalLine."Source Code");
+        TESTFIELD("Reason Code",JournalNameJournalLine."Reason Code");
+        TESTFIELD("Shortcut Dimension 1 Code",JournalNameJournalLine."Shortcut Dimension 1 Code");
+        TESTFIELD("Shortcut Dimension 2 Code",JournalNameJournalLine."Shortcut Dimension 2 Code");
+        TESTFIELD("Dimension Set ID",JournalNameJournalLine."Dimension Set ID");
+      END;
+    END;
+
+    [MessageHandler]
+    PROCEDURE MessageHandler@1170170011(Message@1170170000 : Text[1024]);
+    BEGIN
+    END;
+
+    [ConfirmHandler]
+    PROCEDURE ConfirmHandler@15(Question@1000 : Text[1024];VAR Reply@1001 : Boolean);
+    BEGIN
+      Reply := TRUE;
+    END;
+
+    BEGIN
+    END.
+  }
+}
+
+OBJECT Codeunit 7014901 Library-<JournalName> Journal
+{
+  OBJECT-PROPERTIES
+  {
+    Date=30/09/20;
+    Time=12:00:00;
+    Modified=Yes;
+    Version List=DIAES14.00,Test;
+  }
+  PROPERTIES
+  {
+    OnRun=BEGIN
+          END;
+
+  }
+  CODE
+  {
+    VAR
+      LibraryUtility@1170170000 : Codeunit 131000;
+      LibraryERM@1170170001 : Codeunit 131300;
+      LibraryDimension@1170170002 : Codeunit 131001;
+
+    PROCEDURE CreateJournalNameJournalLine@1170170003(VAR JournalNameJournalLine@1170170000 : Record 7014452);
+    VAR
+      JournalNameJournalTemplate@1170170001 : Record 7014450;
+      JournalNameJournalBatch@1170170002 : Record 7014451;
+      SourceCode@1170170003 : Record 230;
+      ReasonCode@1170170004 : Record 231;
+      Dimension1@1170170005 : Record 348;
+      DimensionValue1@1170170006 : Record 349;
+      Dimension2@1170170008 : Record 348;
+      DimensionValue2@1170170007 : Record 349;
+      GeneralLedgerSetup@1170170009 : Record 98;
+    BEGIN
+      WITH JournalNameJournalLine DO BEGIN
+        CreateJournalNameJournalTemplate(JournalNameJournalTemplate);
+        CreateJournalNameJournalBatch(JournalNameJournalBatch,JournalNameJournalTemplate.Name);
+        JournalNameJournalBatch.MODIFY;
+
+        "Journal Template Name" := JournalNameJournalTemplate.Name;
+        "Journal Batch Name" := JournalNameJournalBatch.Name;
+        "Line No." := 10000;
+        INSERT(TRUE);
+        VALIDATE("Posting Date",WORKDATE);
+        VALIDATE("Document No.",LibraryUtility.GenerateRandomText(MAXSTRLEN("Document No.")));
+        VALIDATE(Description,LibraryUtility.GenerateRandomText(MAXSTRLEN(Description)));
+        GeneralLedgerSetup.GET;
+        LibraryERM.CreateReasonCode(ReasonCode);
+        "Reason Code" := ReasonCode.Code;
+        LibraryERM.CreateSourceCode(SourceCode);
+        "Source Code" := SourceCode.Code;
+        MODIFY(TRUE);
+      END;
+    END;
+
+    PROCEDURE CreateJournalNameJournalLineWithPostingNoSeries@1170170008(VAR JournalNameJournalLine@1170170000 : Record 7014452);
+    VAR
+      JournalNameJournalTemplate@1170170001 : Record 7014450;
+      JournalNameJournalBatch@1170170002 : Record 7014451;
+      SourceCode@1170170003 : Record 230;
+      ReasonCode@1170170004 : Record 231;
+      Dimension1@1170170005 : Record 348;
+      DimensionValue1@1170170006 : Record 349;
+      Dimension2@1170170008 : Record 348;
+      DimensionValue2@1170170007 : Record 349;
+      GeneralLedgerSetup@1170170009 : Record 98;
+    BEGIN
+      WITH JournalNameJournalLine DO BEGIN
+        CreateJournalNameJournalTemplate(JournalNameJournalTemplate);
+        CreateJournalNameJournalBatch(JournalNameJournalBatch,JournalNameJournalTemplate.Name);
+        JournalNameJournalBatch."Posting No. Series" := LibraryERM.CreateNoSeriesCode;
+        JournalNameJournalBatch.MODIFY;
+
+        "Journal Template Name" := JournalNameJournalTemplate.Name;
+        "Journal Batch Name" := JournalNameJournalBatch.Name;
+        "Line No." := 10000;
+        INSERT(TRUE);
+        VALIDATE("Posting Date",WORKDATE);
+        VALIDATE(Description,LibraryUtility.GenerateRandomText(MAXSTRLEN(Description)));
+        GeneralLedgerSetup.GET;
+        LibraryERM.CreateReasonCode(ReasonCode);
+        "Reason Code" := ReasonCode.Code;
+        LibraryERM.CreateSourceCode(SourceCode);
+        "Source Code" := SourceCode.Code;
+        MODIFY(TRUE);
+      END;
+    END;
+
+    PROCEDURE CreateJournalNameJournalLineWithDimensions@1170170007(VAR JournalNameJournalLine@1170170000 : Record 7014452);
+    VAR
+      JournalNameJournalTemplate@1170170001 : Record 7014450;
+      JournalNameJournalBatch@1170170002 : Record 7014451;
+      SourceCode@1170170003 : Record 230;
+      ReasonCode@1170170004 : Record 231;
+      Dimension1@1170170005 : Record 348;
+      DimensionValue1@1170170006 : Record 349;
+      Dimension2@1170170008 : Record 348;
+      DimensionValue2@1170170007 : Record 349;
+      GeneralLedgerSetup@1170170009 : Record 98;
+    BEGIN
+      WITH JournalNameJournalLine DO BEGIN
+        CreateJournalNameJournalTemplate(JournalNameJournalTemplate);
+        CreateJournalNameJournalBatch(JournalNameJournalBatch,JournalNameJournalTemplate.Name);
+        JournalNameJournalBatch."Posting No. Series" := LibraryERM.CreateNoSeriesCode;
+        JournalNameJournalBatch.MODIFY;
+
+        "Journal Template Name" := JournalNameJournalTemplate.Name;
+        "Journal Batch Name" := JournalNameJournalBatch.Name;
+        "Line No." := 10000;
+        INSERT(TRUE);
+        VALIDATE("Posting Date",WORKDATE);
+        // VALIDATE("Document No.",LibraryUtility.GenerateRandomText(MAXSTRLEN("Document No.")));
+        VALIDATE(Description,LibraryUtility.GenerateRandomText(MAXSTRLEN(Description)));
+        GeneralLedgerSetup.GET;
+
+        IF GeneralLedgerSetup."Global Dimension 1 Code" <> '' THEN BEGIN
+          Dimension1.GET(GeneralLedgerSetup."Global Dimension 1 Code");
+        END ELSE BEGIN
+          LibraryDimension.CreateDimension(Dimension1);
+          GeneralLedgerSetup.VALIDATE("Global Dimension 1 Code",Dimension1.Code);
+          GeneralLedgerSetup.MODIFY;
+        END;
+        LibraryDimension.CreateDimensionValue(DimensionValue1,Dimension1.Code);
+        VALIDATE("Shortcut Dimension 1 Code",DimensionValue1.Code);
+
+        IF GeneralLedgerSetup."Global Dimension 2 Code" <> '' THEN BEGIN
+          Dimension2.GET(GeneralLedgerSetup."Global Dimension 2 Code");
+        END ELSE BEGIN
+          LibraryDimension.CreateDimension(Dimension2);
+          GeneralLedgerSetup.VALIDATE("Global Dimension 2 Code",Dimension2.Code);
+          GeneralLedgerSetup.MODIFY;
+        END;
+        LibraryDimension.CreateDimensionValue(DimensionValue2,Dimension2.Code);
+        VALIDATE("Shortcut Dimension 2 Code",DimensionValue2.Code);
+
+        LibraryERM.CreateReasonCode(ReasonCode);
+        "Reason Code" := ReasonCode.Code;
+        LibraryERM.CreateSourceCode(SourceCode);
+        "Source Code" := SourceCode.Code;
+        TESTFIELD("Dimension Set ID");
+        MODIFY(TRUE);
+      END;
+    END;
+
+    PROCEDURE PostJournalNameJournalLine@1170170000(JournalNameJournalLine@1170170000 : Record 7014452);
+    BEGIN
+      CODEUNIT.RUN(CODEUNIT::"<JournalName> Jnl.-Post Batch",JournalNameJournalLine);
+    END;
+
+    [External]
+    PROCEDURE CreateJournalNameJournalBatch@75(VAR JournalNameJournalBatch@1170170000 : Record 7014451;JournalTemplateName@1001 : Code[10]);
+    BEGIN
+      // creates a new Journal Batch named with the next available number (if it does not yet exist), OR
+      // returns the Gen. Journal batch named with the next available number
+      // calling ConvertNumericToText to avoid auto-removal of the batch during posting by COD13
+      WITH JournalNameJournalBatch DO BEGIN
+        INIT;
+        VALIDATE("Journal Template Name",JournalTemplateName);
+        VALIDATE(
+          Name,
+          LibraryUtility.ConvertNumericToText(
+            COPYSTR(
+              LibraryUtility.GenerateRandomCode(FIELDNO(Name),DATABASE::"<JournalName> Journal Batch"),
+              1,
+              LibraryUtility.GetFieldLength(DATABASE::"Gen. Journal Batch",FIELDNO(Name)))));
+        VALIDATE(Description,Name);  // Validating Name as Description because value is not important.
+        IF INSERT(TRUE) THEN;
+      END;
+    END;
+
+    [External]
+    PROCEDURE CreateJournalNameJournalTemplate@68(VAR JournalNameJournalTemplate@1170170000 : Record 7014450);
+    BEGIN
+      WITH JournalNameJournalTemplate DO BEGIN
+        INIT;
+        VALIDATE(
+          Name,
+          COPYSTR(
+            LibraryUtility.GenerateRandomCode(FIELDNO(Name),DATABASE::"<JournalName> Journal Template"),
+            1,
+            LibraryUtility.GetFieldLength(DATABASE::"Gen. Journal Template",FIELDNO(Name))));
+        VALIDATE(Description,Name);
+        // Validating Name as Description because value is not important.
+        INSERT(TRUE);
+      END;
+    END;
+
+    BEGIN
+    END.
+  }
+}
+
+OBJECT Page 7014450 <JournalName> Jnl. Templates
+{
+  OBJECT-PROPERTIES
+  {
+    Date=30/09/20;
+    Time=12:00:00;
+    Modified=Yes;
+    Version List=DIAES14.00;
+  }
+  PROPERTIES
+  {
+    CaptionML=[ENU=<JournalName> Journal Templates;
+               ESP=Libros diario <nombrediario>];
+    SourceTable=Table7014450;
+    PageType=List;
+    ActionList=ACTIONS
+    {
+      { 1900000003;0 ;ActionContainer;
+                      ActionContainerType=RelatedInformation }
+      { 29      ;1   ;ActionGroup;
+                      CaptionML=[ENU=Te&mplate;
+                                 ESP=&Libro];
+                      Image=Template }
+      { 30      ;2   ;Action    ;
+                      Name=Page 7014453;
+                      CaptionML=[ENU=Batches;
+                                 ESP=Secciones];
+                      RunObject=Page 7014453;
+                      RunPageLink=Journal Template Name=FIELD(Name);
+                      Image=Description }
+    }
+  }
+  CONTROLS
+  {
+    { 1900000001;0;Container;
+                ContainerType=ContentArea }
+
+    { 1   ;1   ;Group     ;
+                GroupType=Repeater }
+
+    { 2   ;2   ;Field     ;
+                SourceExpr=Name }
+
+    { 4   ;2   ;Field     ;
+                SourceExpr=Description }
+
+    { 31  ;2   ;Field     ;
+                SourceExpr="No. series" }
+
+    { 33  ;2   ;Field     ;
+                SourceExpr="Posting No. series" }
+
+    { 21  ;2   ;Field     ;
+                SourceExpr="Source Code" }
+
+    { 8   ;2   ;Field     ;
+                SourceExpr="Reason Code" }
+
+    { 15  ;2   ;Field     ;
+                SourceExpr="Page ID";
+                Visible=FALSE;
+                LookupPageID=Objects }
+
+    { 23  ;2   ;Field     ;
+                DrillDown=No;
+                SourceExpr="Page Name";
+                Visible=FALSE }
+
+    { 17  ;2   ;Field     ;
+                SourceExpr="Test Report ID";
+                Visible=FALSE;
+                LookupPageID=Objects }
+
+    { 25  ;2   ;Field     ;
+                DrillDown=No;
+                SourceExpr="Test Report Name";
+                Visible=FALSE }
+
+    { 19  ;2   ;Field     ;
+                SourceExpr="Posting Report ID";
+                Visible=FALSE;
+                LookupPageID=Objects }
+
+    { 27  ;2   ;Field     ;
+                DrillDown=No;
+                SourceExpr="Posting Report Name";
+                Visible=FALSE }
+
+    { 1900000007;0;Container;
+                ContainerType=FactBoxArea }
+
+    { 1900383207;1;Part   ;
+                Visible=FALSE;
+                PartType=System;
+                SystemPartID=RecordLinks }
+
+    { 1905767507;1;Part   ;
+                Visible=FALSE;
+                PartType=System;
+                SystemPartID=Notes }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+
+OBJECT Page 7014451 <JournalName> Journal
+{
+  OBJECT-PROPERTIES
+  {
+    Date=30/09/20;
+    Time=12:00:00;
+    Modified=Yes;
+    Version List=DIAES14.00;
+  }
+  PROPERTIES
+  {
+    CaptionML=[ENU=<JournalName> Journal;
+               ESP=Diario <nombrediario>];
+    SaveValues=Yes;
+    SourceTable=Table7014452;
+    DelayedInsert=Yes;
+    DataCaptionFields=Journal Template Name,Journal Batch Name;
+    PageType=Worksheet;
+    AutoSplitKey=Yes;
+    OnOpenPage=VAR
+                 DiarioSeleccionado@1000 : Boolean;
+               BEGIN
+                 OpenFromJournalBatch := ("Journal Batch Name" <> '') AND ("Journal Template Name" = '');
+                 IF OpenFromJournalBatch THEN BEGIN
+                   ActualJournalBatch := "Journal Batch Name";
+                   JournalNameJournalMgt.OpenJournal(ActualJournalBatch,Rec);
+                   EXIT;
+                 END;
+                 JournalNameJournalMgt.SelectTemplate(PAGE::"<JournalName> Journal",Rec,DiarioSeleccionado);
+                 IF NOT DiarioSeleccionado THEN
+                   ERROR('');
+                 JournalNameJournalMgt.OpenJournal(ActualJournalBatch,Rec);
+               END;
+
+    OnNewRecord=BEGIN
+                  SetupNewLine(xRec);
+                  CLEAR(ShortcutDimCode);
+                END;
+
+    ActionList=ACTIONS
+    {
+      { 1900000003;0 ;ActionContainer;
+                      ActionContainerType=RelatedInformation }
+      { 36      ;1   ;ActionGroup;
+                      CaptionML=[ENU=P&osting;
+                                 ESP=&Registro];
+                      Image=Post }
+      { 47      ;2   ;Action    ;
+                      Ellipsis=Yes;
+                      CaptionML=[ENU=Test Report;
+                                 ESP=Informe prueba];
+                      Image=TestReport;
+                      OnAction=VAR
+                                 ReportPrint@1170170000 : Codeunit 7014450;
+                               BEGIN
+                                 ReportPrint.PrintJournalLine(Rec);
+                               END;
+                                }
+      { 48      ;2   ;Action    ;
+                      ShortCutKey=F9;
+                      CaptionML=[ENU=P&ost;
+                                 ESP=&Registrar];
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      Image=PostOrder;
+                      PromotedCategory=Process;
+                      OnAction=BEGIN
+                                 CODEUNIT.RUN(CODEUNIT::"<JournalName> Journal-Post",Rec);
+                                 ActualJournalBatch := GETRANGEMAX("Journal Batch Name");
+                                 CurrPage.UPDATE(FALSE);
+                               END;
+                                }
+      { 49      ;2   ;Action    ;
+                      ShortCutKey=Shift+F9;
+                      CaptionML=[ENU=Post and &Print;
+                                 ESP=Registrar e &imprimir];
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      Image=PostPrint;
+                      PromotedCategory=Process;
+                      OnAction=BEGIN
+                                 CODEUNIT.RUN(CODEUNIT::"<JournalName> Jnl.-Post+Print",Rec);
+                                 ActualJournalBatch := GETRANGEMAX("Journal Batch Name");
+                                 CurrPage.UPDATE(FALSE);
+                               END;
+                                }
+    }
+  }
+  CONTROLS
+  {
+    { 1900000001;0;Container;
+                ContainerType=ContentArea }
+
+    { 39  ;1   ;Field     ;
+                Lookup=Yes;
+                CaptionML=[ENU=Batch Name;
+                           ESP=Nombre secci¢n];
+                SourceExpr=ActualJournalBatch;
+                OnValidate=BEGIN
+                             JournalNameJournalMgt.CheckName(ActualJournalBatch,Rec);
+                           END;
+
+                OnLookup=BEGIN
+                           CurrPage.SAVERECORD;
+                           JournalNameJournalMgt.LookupNombre(ActualJournalBatch,Rec);
+                           CurrPage.UPDATE(FALSE);
+                         END;
+                          }
+
+    { 1   ;1   ;Group     ;
+                GroupType=Repeater }
+
+    { 1170170020;2;Field  ;
+                SourceExpr="Line No.";
+                Visible=false }
+
+    { 1170170001;2;Field  ;
+                SourceExpr="Document No." }
+
+    { 1170170000;2;Field  ;
+                SourceExpr="Posting Date" }
+
+    { 1170170002;2;Field  ;
+                SourceExpr=Description }
+
+    { 1900000007;0;Container;
+                ContainerType=FactBoxArea }
+
+    { 1900383207;1;Part   ;
+                Visible=FALSE;
+                PartType=System;
+                SystemPartID=RecordLinks }
+
+    { 1905767507;1;Part   ;
+                Visible=FALSE;
+                PartType=System;
+                SystemPartID=Notes }
+
+  }
+  CODE
+  {
+    VAR
+      JournalNameJournalMgt@1000 : Codeunit 7014450;
+      ActualJournalBatch@1002 : Code[10];
+      NombreNombreDiario@1003 : Text[50];
+      ShortcutDimCode@1004 : ARRAY [8] OF Code[20];
+      OpenFromJournalBatch@1005 : Boolean;
+
+    LOCAL PROCEDURE CurrentJnlBatchNameOnAfterVali@19002411();
+    BEGIN
+      CurrPage.SAVERECORD;
+      JournalNameJournalMgt.SetName(ActualJournalBatch,Rec);
+      CurrPage.UPDATE(FALSE);
+    END;
+
+    BEGIN
+    END.
+  }
+}
+
+OBJECT Page 7014452 <JournalName> Jnl. Temp. List
+{
+  OBJECT-PROPERTIES
+  {
+    Date=30/09/20;
+    Time=12:00:00;
+    Modified=Yes;
+    Version List=DIAES14.00;
+  }
+  PROPERTIES
+  {
+    Editable=No;
+    CaptionML=[ENU=<JournalName> Journal Template List;
+               ESP=Lista libros diario <nombrediario>];
+    SourceTable=Table206;
+    PageType=List;
+    RefreshOnActivate=Yes;
+  }
+  CONTROLS
+  {
+    { 1900000001;0;Container;
+                ContainerType=ContentArea }
+
+    { 1   ;1   ;Group     ;
+                GroupType=Repeater }
+
+    { 2   ;2   ;Field     ;
+                SourceExpr=Name }
+
+    { 4   ;2   ;Field     ;
+                SourceExpr=Description }
+
+    { 22  ;2   ;Field     ;
+                SourceExpr=Recurring;
+                Visible=FALSE }
+
+    { 18  ;2   ;Field     ;
+                SourceExpr="Source Code";
+                Visible=FALSE }
+
+    { 20  ;2   ;Field     ;
+                SourceExpr="Reason Code";
+                Visible=FALSE }
+
+    { 9   ;2   ;Field     ;
+                SourceExpr="Page ID";
+                Visible=FALSE;
+                LookupPageID=Objects }
+
+    { 7   ;2   ;Field     ;
+                SourceExpr="Test Report ID";
+                Visible=FALSE;
+                LookupPageID=Objects }
+
+    { 11  ;2   ;Field     ;
+                SourceExpr="Posting Report ID";
+                Visible=FALSE;
+                LookupPageID=Objects }
+
+    { 16  ;2   ;Field     ;
+                SourceExpr="Force Posting Report";
+                Visible=FALSE }
+
+    { 1900000007;0;Container;
+                ContainerType=FactBoxArea }
+
+    { 1900383207;1;Part   ;
+                Visible=FALSE;
+                PartType=System;
+                SystemPartID=RecordLinks }
+
+    { 1905767507;1;Part   ;
+                Visible=FALSE;
+                PartType=System;
+                SystemPartID=Notes }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+
+OBJECT Page 7014453 <JournalName> Jnl. Batches
+{
+  OBJECT-PROPERTIES
+  {
+    Date=30/09/20;
+    Time=12:00:00;
+    Modified=Yes;
+    Version List=DIAES14.00;
+  }
+  PROPERTIES
+  {
+    CaptionML=[ENU=<JournalName> Journal Batches;
+               ESP=Secciones diario <nombrediario>];
+    SourceTable=Table7014451;
+    DataCaptionExpr=DataCaption;
+    PageType=List;
+    OnInit=BEGIN
+             SETRANGE("Journal Template Name");
+           END;
+
+    OnOpenPage=BEGIN
+                 JournalNameJournalMgt.OpenBatch(Rec);
+               END;
+
+    OnNewRecord=BEGIN
+                  SetupNewJournalBatch;
+                END;
+
+    ActionList=ACTIONS
+    {
+      { 1900000004;0 ;ActionContainer;
+                      ActionContainerType=ActionItems }
+      { 19      ;1   ;Action    ;
+                      ShortCutKey=Return;
+                      CaptionML=[ENU=Edit Journal;
+                                 ESP=Editar diario];
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      Image=OpenJournal;
+                      PromotedCategory=Process;
+                      OnAction=BEGIN
+                                 JournalNameJournalMgt.SelectTemplateFromBatch(Rec);
+                               END;
+                                }
+      { 11      ;1   ;ActionGroup;
+                      CaptionML=[ENU=P&osting;
+                                 ESP=&Registro];
+                      Image=Post }
+      { 12      ;2   ;Action    ;
+                      Ellipsis=Yes;
+                      CaptionML=[ENU=Test Report;
+                                 ESP=Informe prueba];
+                      Image=TestReport;
+                      OnAction=VAR
+                                 ReportPrint@1170170000 : Codeunit 7014450;
+                               BEGIN
+                                 ReportPrint.PrintJournalBatch(Rec);
+                               END;
+                                }
+      { 13      ;2   ;Action    ;
+                      ShortCutKey=F9;
+                      CaptionML=[ENU=P&ost;
+                                 ESP=&Registrar];
+                      RunObject=Codeunit 273;
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      Image=PostOrder;
+                      PromotedCategory=Process }
+      { 14      ;2   ;Action    ;
+                      ShortCutKey=Shift+F9;
+                      CaptionML=[ENU=Post and &Print;
+                                 ESP=Registrar e &imprimir];
+                      RunObject=Codeunit 274;
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      Image=PostPrint;
+                      PromotedCategory=Process }
+    }
+  }
+  CONTROLS
+  {
+    { 1900000001;0;Container;
+                ContainerType=ContentArea }
+
+    { 1   ;1   ;Group     ;
+                GroupType=Repeater }
+
+    { 2   ;2   ;Field     ;
+                SourceExpr=Name }
+
+    { 4   ;2   ;Field     ;
+                SourceExpr=Description }
+
+    { 15  ;2   ;Field     ;
+                SourceExpr="No. Series" }
+
+    { 17  ;2   ;Field     ;
+                SourceExpr="Posting No. Series" }
+
+    { 6   ;2   ;Field     ;
+                SourceExpr="Reason Code" }
+
+    { 1900000007;0;Container;
+                ContainerType=FactBoxArea }
+
+    { 1900383207;1;Part   ;
+                Visible=FALSE;
+                PartType=System;
+                SystemPartID=RecordLinks }
+
+    { 1905767507;1;Part   ;
+                Visible=FALSE;
+                PartType=System;
+                SystemPartID=Notes }
+
+  }
+  CODE
+  {
+    VAR
+      JournalNameJournalMgt@1001 : Codeunit 7014450;
+
+    LOCAL PROCEDURE DataCaption@1() : Text[250];
+    VAR
+      LibroDiario@1000 : Record 7014450;
+    BEGIN
+      IF NOT CurrPage.LOOKUPMODE THEN
+        IF GETFILTER("Journal Template Name") <> '' THEN
+          IF GETRANGEMIN("Journal Template Name") = GETRANGEMAX("Journal Template Name") THEN
+            IF LibroDiario.GET(GETRANGEMIN("Journal Template Name")) THEN
+              EXIT(LibroDiario.Name + ' ' + LibroDiario.Description);
+    END;
+
+    BEGIN
+    END.
+  }
+}
+
+OBJECT Page 7014454 <JournalName> Entries
+{
+  OBJECT-PROPERTIES
+  {
+    Date=30/09/20;
+    Time=12:00:00;
+    Modified=Yes;
+    Version List=DIAES14.00;
+  }
+  PROPERTIES
+  {
+    CaptionML=[ENU=<JournalName> Entries;
+               ESP=Movs. <nombrediario>];
+    InsertAllowed=No;
+    DeleteAllowed=No;
+    SourceTable=Table7014453;
+    PageType=List;
+    ActionList=ACTIONS
+    {
+      { 1170170013;  ;ActionContainer;
+                      CaptionML=ESP=Acciones;
+                      ActionContainerType=ActionItems }
+      { 1170170014;1 ;Action    ;
+                      Name=Imprimir;
+                      Image=Print;
+                      OnAction=BEGIN
+                                 CLEAR(RpMovimientos);
+                                 RpMovimientos.SETTABLEVIEW(Rec);
+                                 RpMovimientos.RUN;
+                               END;
+                                }
+    }
+  }
+  CONTROLS
+  {
+    { 1170170000;0;Container;
+                ContainerType=ContentArea }
+
+    { 1170170001;1;Group  ;
+                Name=Group;
+                GroupType=Repeater }
+
+    { 1170170009;2;Field  ;
+                SourceExpr="Document No." }
+
+    { 1170170007;2;Field  ;
+                SourceExpr="Posting Date" }
+
+    { 1170170004;2;Field  ;
+                SourceExpr=Description }
+
+    { 1170170015;2;Field  ;
+                SourceExpr="Source Code";
+                Visible=FALSE }
+
+    { 1170170012;2;Field  ;
+                SourceExpr="Entry No.";
+                Visible=FALSE;
+                Editable=False }
+
+  }
+  CODE
+  {
+    VAR
+      RpMovimientos@1170170000 : Report 7014450;
+
+    BEGIN
+    END.
+  }
+}
+
