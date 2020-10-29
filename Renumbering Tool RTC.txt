@@ -1,0 +1,757 @@
+OBJECT Table 90000 Object Renumber
+{
+  OBJECT-PROPERTIES
+  {
+    Date=11/12/19;
+    Time=[ 9:53:23];
+    Modified=Yes;
+    Version List=DYRN8.00;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Object Renumber;
+  }
+  FIELDS
+  {
+    { 1   ;   ;Source Type         ;Option        ;CaptionML=[ENU=Source Type;
+                                                              ITA=Tipo Origine];
+                                                   OptionString=[ ,Table,Form,Report,Dataport,XMLport,Codeunit,MenuSuite,Page,Query] }
+    { 2   ;   ;Source ID           ;Integer       ;CaptionML=[ENU=Source ID;
+                                                              ITA=ID Origine] }
+    { 3   ;   ;Destination ID      ;Integer       ;OnLookup=VAR
+                                                              TempObject@1100408000 : TEMPORARY Record 2000000001;
+                                                            BEGIN
+                                                              BuildPermissionRange(TempObject,"Source Type",FALSE);
+                                                              IF PAGE.RUNMODAL(PAGE::Objects,TempObject) = ACTION::LookupOK THEN
+                                                                "Destination ID" := TempObject.ID;
+                                                            END;
+
+                                                   CaptionML=[ENU=Destination ID;
+                                                              ITA=ID Destinazione] }
+    { 4   ;   ;Nombre objeto existente;Text50     ;FieldClass=FlowField;
+                                                   CalcFormula=Lookup(AllObj."Object Name" WHERE (Object Type=FIELD(Source Type),
+                                                                                                  Object ID=FIELD(Destination ID))) }
+  }
+  KEYS
+  {
+    {    ;Source Type,Source ID                   ;Clustered=Yes }
+    {    ;Source Type,Destination ID               }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+    VAR
+      TempMenuSuiteSetup@1100408023 : TEMPORARY Record 90000;
+      TempPermissionRange@1100408025 : TEMPORARY Record 90000;
+      FileMgt@1100408003 : Codeunit 419;
+      ClientFile@1100408002 : DotNet "'mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.IO.File" RUNONCLIENT;
+      Encoding@1100408006 : DotNet "'mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Text.Encoding";
+      ObjectDataArray@1100408000 : DotNet "'mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Array";
+      OpenObjectFile@1100408004 : TextConst 'ENU=Open Object Text File';
+      SaveObjectFile@1100408001 : TextConst 'ENU=Save Object Text File';
+      OpenExcelFile@1100408018 : TextConst 'ENU=Open Excel File';
+      TextFileFilter@1100408005 : TextConst 'ENU=Text Files (*.txt)|*.txt|All Files (*.*)|*.*';
+      ExcelFileFilter@1100408017 : TextConst 'ENU=Excel Files (*.xls*)|*.xls*|All Files (*.*)|*.*';
+      MenuSuiteProcess@1100408030 : TextConst 'ENU=Updating MenuSuite';
+      ReplacingProcess@1100408007 : TextConst 'ENU=Replacing';
+      ObjectData@1100408008 : DotNet "'mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.String";
+      Window@1100408011 : Dialog;
+      WindowLastUpdated@1100408021 : DateTime;
+      Counter@1100408010 : Integer;
+      Total@1100408009 : Integer;
+      ReadingFile@1100408012 : TextConst 'ENU=Reading File';
+      WritingFile@1100408013 : TextConst 'ENU=Writing File';
+      ReadingLines@1100408014 : TextConst 'ENU=Reading Lines';
+      TypeNotFoundError@1100408015 : TextConst 'ENU=Type %1 not found';
+      RenumberLines@1100408016 : TextConst 'ENU=Renumbering Lines';
+      NoOfLines@1100408019 : TextConst 'ENU=No. of Lines';
+      CurrentLine@1100408020 : TextConst 'ENU=Current Line No.';
+      OpeningExcel@1100408024 : TextConst 'ENU=Opening Excel';
+      AvailableObject@1100408026 : TextConst 'ENU=Available Object';
+      FindAvailableObjects@1100408027 : TextConst 'ENU=Finding Available Objects';
+      CreatingSuggestion@1100408028 : TextConst 'ENU=Creating Suggestion';
+      UploadingFile@1100408029 : TextConst 'ENU=Uploading File to the Server temporary storage';
+      UseInMemoryObjects@1100408031 : TextConst 'ENU=Object are in memory, use them ?';
+      TituloExcel@1170170000 : TextConst 'ENU=Renumbering Tool;ESP=Renumbering Tool';
+      TxtErrorTipoObjeto@1170170001 : TextConst 'ESP=Tipo de objeto no identificado';
+      TxtErrorDataport@1170170002 : TextConst 'ESP=Dataports no soportados';
+      TxtErrorForm@1170170003 : TextConst 'ESP=Forms no soportados';
+
+    LOCAL PROCEDURE GetObjectTypeFromText@1100408005(ObjectTypeText@1100408000 : Text) : Integer;
+    BEGIN
+      ObjectTypeText := DELCHR(ObjectTypeText,'<','[');
+      CASE ObjectTypeText OF
+        'Table':
+          EXIT("Source Type"::Table);
+        'Page':
+          EXIT("Source Type"::Page);
+        'Form':
+          EXIT("Source Type"::Form);
+        'Report':
+          EXIT("Source Type"::Report);
+        'Codeunit':
+          EXIT("Source Type"::Codeunit);
+        'Query':
+          EXIT("Source Type"::Query);
+        'XMLport':
+          EXIT("Source Type"::XMLport);
+        'Dataport':
+          EXIT("Source Type"::Dataport);
+        'MenuSuite':
+          EXIT("Source Type"::MenuSuite);
+        ELSE
+          ERROR(TypeNotFoundError,ObjectTypeText);
+      END;
+    END;
+
+    LOCAL PROCEDURE GetObjectIdFromText@1100408014(ObjectIdText@1100408000 : Text) ObjectId : Integer;
+    BEGIN
+      IF NOT EVALUATE(ObjectId,ObjectIdText) THEN
+        EXIT(0);
+    END;
+
+    LOCAL PROCEDURE UploadFileToServer@1100408011() ServerTempFileName : Text;
+    VAR
+      ClientFileMode@1100408004 : DotNet "'mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.IO.FileMode" RUNONCLIENT;
+      ClientFileStream@1100408001 : DotNet "'mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.IO.FileStream" RUNONCLIENT;
+      ServerFileMode@1100408000 : DotNet "'mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.IO.FileMode";
+      ServerFileStream@1100408002 : DotNet "'mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.IO.FileStream";
+      Byte@1100408008 : DotNet "'mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Byte";
+      ByteArray@1100408006 : DotNet "'mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Array" RUNONCLIENT;
+      FileName@1100408003 : Text;
+      BytesToRead@1100408007 : Integer;
+      BytesRead@1100408009 : Integer;
+    BEGIN
+      FileName := FileMgt.OpenFileDialog(OpenObjectFile,FileName,TextFileFilter);
+      IF NOT FileMgt.ClientFileExists(FileName) THEN EXIT;
+
+      Counter := 0;
+      BytesToRead := 1024 * 4000;
+      ByteArray := ByteArray.CreateInstance(GETDOTNETTYPE(Byte),BytesToRead);
+      ServerTempFileName := FileMgt.ServerTempFileName('txt');
+      ClientFileStream := ClientFileStream.FileStream(FileName,ClientFileMode.Open);
+      ServerFileStream := ServerFileStream.FileStream(ServerTempFileName,ServerFileMode.CreateNew);
+      Window.OPEN(UploadingFile + ' @1@@@@@@@@@@@@@@@@@@@@@@@@\');
+
+      REPEAT
+        BytesRead := ClientFileStream.Read(ByteArray,0,BytesToRead);
+        ServerFileStream.Write(ByteArray,0,BytesRead);
+        IF ClientFileStream.Length - ClientFileStream.Position < BytesToRead THEN
+          BytesToRead := ClientFileStream.Length - ClientFileStream.Position;
+        Window.UPDATE(1,ROUND(ClientFileStream.Position / ClientFileStream.Length * 10000,1));
+      UNTIL ClientFileStream.Position = ClientFileStream.Length;
+      ClientFileStream.Close;
+      ServerFileStream.Close;
+      Window.CLOSE;
+    END;
+
+    PROCEDURE LoadFileIntoObjectDataArray@1100408001() : Boolean;
+    VAR
+      ServerFile@1100408001 : DotNet "'mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.IO.File";
+      ServerTempFileName@1100408000 : Text;
+    BEGIN
+      IF NOT ISNULL(ObjectDataArray) THEN
+        IF ObjectDataArray.Length > 0 THEN
+          IF CONFIRM(UseInMemoryObjects,TRUE) THEN EXIT(TRUE);
+      ServerTempFileName := UploadFileToServer;
+      Window.OPEN(ReadingFile);
+      ObjectDataArray := ServerFile.ReadAllLines(ServerTempFileName,Encoding.GetEncoding('ibm850'));
+      ERASE(ServerTempFileName);
+      Window.CLOSE;
+      EXIT(TRUE);
+    END;
+
+    PROCEDURE LoadObjectDataIntoSetup@1100408018();
+    VAR
+      SplitChar@1100408000 : DotNet "'mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Char";
+      SplitCharArray@1100408004 : DotNet "'mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Array";
+      SplitString@1100408006 : DotNet "'mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.String";
+      SplitStringArray@1100408005 : DotNet "'mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Array";
+      RenumberingSetup@1100408002 : Record 90000;
+      SearchString@1100408001 : Variant;
+      SpaceChar@1100408007 : Char;
+    BEGIN
+      IF NOT LoadFileIntoObjectDataArray THEN EXIT;
+      SplitCharArray := SplitCharArray.CreateInstance(GETDOTNETTYPE(SplitChar),1);
+      SpaceChar := 32;
+      SplitCharArray.SetValue(SpaceChar,0);
+      Total := ObjectDataArray.Length;
+      Window.OPEN(
+        ReadingLines + ' @1@@@@@@@@@@@@@@@@@@@@@@@@\' +
+        CurrentLine + ' #2#######\' +
+        NoOfLines + '#3#######');
+      Window.UPDATE(3,Total);
+      WindowLastUpdated := CURRENTDATETIME;
+      Counter := 0;
+      REPEAT
+        ObjectData := ObjectDataArray.GetValue(Counter);
+        SplitStringArray := ObjectData.Split(SplitCharArray);
+        IF LoadStringArrayIntoSetup(SplitStringArray) THEN BEGIN
+          SearchString := '}';
+          Counter := ObjectDataArray.IndexOf(ObjectDataArray,SearchString,Counter) + 1;
+        END ELSE
+          Counter += 1;
+        IF CURRENTDATETIME - WindowLastUpdated > 1000 THEN BEGIN
+          Window.UPDATE(1,ROUND(Counter / Total * 10000,1));
+          Window.UPDATE(2,Counter);
+          WindowLastUpdated := CURRENTDATETIME;
+        END;
+      UNTIL Counter >= Total - 1;
+      Window.CLOSE;
+    END;
+
+    LOCAL PROCEDURE LoadStringArrayIntoSetup@1100408009(VAR SplitStringArray@1100408000 : DotNet "'mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Array") : Boolean;
+    VAR
+      RenumberingSetup@1100408002 : Record 90000;
+      SplitString@1100408001 : DotNet "'mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.String";
+    BEGIN
+      IF ISNULL(SplitStringArray) THEN EXIT(FALSE);
+      IF SplitStringArray.Length < 4 THEN EXIT(FALSE);
+      SplitString := SplitStringArray.GetValue(0);
+      IF NOT SplitString.Contains('OBJECT') THEN EXIT(FALSE);
+
+      RenumberingSetup.INIT;
+      RenumberingSetup."Source Type" := GetObjectTypeFromText(SplitStringArray.GetValue(1));
+      RenumberingSetup."Source ID" := GetObjectIdFromText(SplitStringArray.GetValue(2));
+      RenumberingSetup.INSERT;
+      EXIT(TRUE);
+    END;
+
+    PROCEDURE ReplaceObjectDataContent@1100408003();
+    VAR
+      Env@1100408004 : DotNet "'mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Environment";
+      RenumberingSetup@1100408000 : Record 90000;
+      TempRenumberingSetup@1100408001 : TEMPORARY Record 90000;
+      FileName@1100408003 : Text;
+      ChunkSize@1100408005 : Integer;
+    BEGIN
+      IF NOT LoadFileIntoObjectDataArray THEN EXIT;
+      FileName := FileMgt.SaveFileDialog(SaveObjectFile,FileName,TextFileFilter);
+      IF FileName = '' THEN EXIT;
+
+      CopyToTemp(RenumberingSetup,TempRenumberingSetup);
+      ReplaceObjectMenuSuiteDataLine(TempRenumberingSetup);
+
+      ClientFile.WriteAllText(FileName,'',Encoding.GetEncoding('ibm850'));
+      ChunkSize := 5000;
+      Total := ObjectDataArray.Length;
+      IF ChunkSize > Total THEN
+        ChunkSize := Total;
+      Window.OPEN(
+        ReplacingProcess + ' @1@@@@@@@@@@@@@@@@@@@@@@@@\' +
+        CurrentLine + ' #2#######\' +
+        NoOfLines + '#3#######');
+      Window.UPDATE(3,Total);
+      WindowLastUpdated := CURRENTDATETIME;
+      Counter := 0;
+      REPEAT
+        ObjectData := ObjectData.Join(Env.NewLine,ObjectDataArray,Counter,ChunkSize);
+        ReplaceObjectDataLine(TempRenumberingSetup);
+        ClientFile.AppendAllText(FileName,ObjectData.Concat(ObjectData,Env.NewLine),Encoding.GetEncoding('ibm850'));
+        Counter += ChunkSize;
+        IF CURRENTDATETIME - WindowLastUpdated > 1000 THEN BEGIN
+          Window.UPDATE(1,ROUND(Counter / Total * 10000,1));
+          Window.UPDATE(2,Counter);
+          WindowLastUpdated := CURRENTDATETIME;
+        END;
+        IF Total - Counter < ChunkSize THEN
+          ChunkSize := Total - Counter;
+      UNTIL Counter = Total;
+      Window.CLOSE;
+    END;
+
+    LOCAL PROCEDURE ReplaceObjectDataLine@1100408010(VAR TempRenumberingSetup@1100408000 : TEMPORARY Record 90000);
+    BEGIN
+      IF TempRenumberingSetup.FINDSET THEN REPEAT
+        ReplaceObjectDataBySetup(TempRenumberingSetup);
+      UNTIL TempRenumberingSetup.NEXT = 0;
+    END;
+
+    LOCAL PROCEDURE ReplaceObjectDataBySetup@1100408015(VAR RenumberingSetup@1100408000 : Record 90000);
+    VAR
+      OldValue@1100408001 : Text;
+      NewValue@1100408002 : Text;
+    BEGIN
+      IF RenumberingSetup."Destination ID" = 0 THEN EXIT;
+      IF RenumberingSetup."Destination ID" = RenumberingSetup."Source ID" THEN EXIT;
+
+      IF RenumberingSetup."Source Type" = RenumberingSetup."Source Type"::Table THEN BEGIN
+        OldValue := STRSUBSTNO('Record %1',RenumberingSetup."Source ID");
+        NewValue := STRSUBSTNO('Record %1',RenumberingSetup."Destination ID");
+        ReplaceObjectDataValue(ObjectData,OldValue,NewValue);
+        OldValue := STRSUBSTNO('Record%1',RenumberingSetup."Source ID");
+        NewValue := STRSUBSTNO('Record%1',RenumberingSetup."Destination ID");
+        ReplaceObjectDataValue(ObjectData,OldValue,NewValue);
+        OldValue := STRSUBSTNO('TableData %1',RenumberingSetup."Source ID");
+        NewValue := STRSUBSTNO('TableData %1',RenumberingSetup."Destination ID");
+        ReplaceObjectDataValue(ObjectData,OldValue,NewValue);
+        OldValue := STRSUBSTNO('TableNo=%1',RenumberingSetup."Source ID");
+        NewValue := STRSUBSTNO('TableNo=%1',RenumberingSetup."Destination ID");
+        ReplaceObjectDataValue(ObjectData,OldValue,NewValue);
+        OldValue := STRSUBSTNO('Table ID=CONST(%1',RenumberingSetup."Source ID");
+        NewValue := STRSUBSTNO('Table ID=CONST(%1',RenumberingSetup."Destination ID");
+        ReplaceObjectDataValue(ObjectData,OldValue,NewValue);
+        OldValue := STRSUBSTNO('CleanTable(%1',RenumberingSetup."Source ID");
+        NewValue := STRSUBSTNO('CleanTable(%1',RenumberingSetup."Destination ID");
+        ReplaceObjectDataValue(ObjectData,OldValue,NewValue);
+      END;
+      OldValue := STRSUBSTNO('%1 %2',RenumberingSetup."Source Type",RenumberingSetup."Source ID");
+      NewValue := STRSUBSTNO('%1 %2',RenumberingSetup."Source Type",RenumberingSetup."Destination ID");
+      ReplaceObjectDataValue(ObjectData,OldValue,NewValue);
+      OldValue := STRSUBSTNO('%1%2',RenumberingSetup."Source Type",RenumberingSetup."Source ID");
+      NewValue := STRSUBSTNO('%1%2',RenumberingSetup."Source Type",RenumberingSetup."Destination ID");
+      ReplaceObjectDataValue(ObjectData,OldValue,NewValue);
+    END;
+
+    LOCAL PROCEDURE ReplaceObjectMenuSuiteDataLine@1100408012(VAR TempRenumberingSetup@1100408000 : TEMPORARY Record 90000);
+    VAR
+      SearchString@1100408004 : Variant;
+      ObjectStartPos@1100408002 : Integer;
+      ObjectEndPos@1100408003 : Integer;
+    BEGIN
+      Total := ObjectDataArray.Length;
+      Window.OPEN(
+        MenuSuiteProcess + ' @1@@@@@@@@@@@@@@@@@@@@@@@@\' +
+        CurrentLine + ' #2#######\' +
+        NoOfLines + '#3#######');
+      Window.UPDATE(3,Total);
+      WindowLastUpdated := CURRENTDATETIME;
+      Counter := 0;
+      REPEAT
+        ObjectData := ObjectDataArray.GetValue(Counter);
+        IF ObjectData.Contains('OBJECT MenuSuite') THEN BEGIN
+          ObjectStartPos := Counter;
+          SearchString := '}';
+          Counter := ObjectDataArray.IndexOf(ObjectDataArray,SearchString,Counter) + 1;
+          IF Counter >= Total THEN
+            Counter := Total - 1;
+          ObjectEndPos := Counter;
+          ReplaceMenuSuiteObject(TempRenumberingSetup,ObjectStartPos,ObjectEndPos);
+        END ELSE IF ObjectData.Contains('OBJECT') THEN BEGIN
+          SearchString := '}';
+          Counter := ObjectDataArray.IndexOf(ObjectDataArray,SearchString,Counter) + 1;
+          IF Counter >= Total THEN
+            Counter := Total - 1;
+        END ELSE
+          Counter += 1;
+        IF CURRENTDATETIME - WindowLastUpdated > 1000 THEN BEGIN
+          Window.UPDATE(1,ROUND(Counter / Total * 10000,1));
+          Window.UPDATE(2,Counter);
+          WindowLastUpdated := CURRENTDATETIME;
+        END;
+      UNTIL Counter >= Total - 1;
+      Window.CLOSE;
+    END;
+
+    LOCAL PROCEDURE ReplaceMenuSuiteObject@1100408013(VAR TempRenumberingSetup@1100408003 : TEMPORARY Record 90000;MenuSuiteStartPos@1100408001 : Integer;MenuSuiteEndPos@1100408000 : Integer);
+    VAR
+      MenuSuiteLine@1100408002 : Integer;
+    BEGIN
+      FOR MenuSuiteLine := MenuSuiteStartPos TO MenuSuiteEndPos DO BEGIN
+        ObjectData := ObjectDataArray.GetValue(MenuSuiteLine);
+        IF ObjectData.Contains('RunObjectType=') THEN BEGIN
+          TempMenuSuiteSetup.COPY(TempRenumberingSetup,TRUE);
+          CASE TRUE OF
+            ObjectData.Contains('Page;') :
+              TempMenuSuiteSetup.SETRANGE("Source Type",TempMenuSuiteSetup."Source Type"::Page);
+            ObjectData.Contains('Codeunit;') :
+              TempMenuSuiteSetup.SETRANGE("Source Type",TempMenuSuiteSetup."Source Type"::Codeunit);
+            ObjectData.Contains('Report;') :
+              TempMenuSuiteSetup.SETRANGE("Source Type",TempMenuSuiteSetup."Source Type"::Report);
+            ObjectData.Contains('Query;') :
+              TempMenuSuiteSetup.SETRANGE("Source Type",TempMenuSuiteSetup."Source Type"::Query);
+            ObjectData.Contains('XMLport;') :
+              TempMenuSuiteSetup.SETRANGE("Source Type",TempMenuSuiteSetup."Source Type"::XMLport);
+            ObjectData.Contains('Form;') :
+              TempMenuSuiteSetup.SETRANGE("Source Type",TempMenuSuiteSetup."Source Type"::Form);
+            ObjectData.Contains('Dataport;') :
+              TempMenuSuiteSetup.SETRANGE("Source Type",TempMenuSuiteSetup."Source Type"::Dataport);
+          END;
+          MenuSuiteLine += 1;
+          ObjectData := ObjectDataArray.GetValue(MenuSuiteLine);
+          IF TempMenuSuiteSetup.FINDSET THEN REPEAT
+            ReplaceRunObjectInMenuSuite(TempMenuSuiteSetup);
+          UNTIL TempMenuSuiteSetup.NEXT = 0;
+          ObjectDataArray.SetValue(ObjectData,MenuSuiteLine);
+        END;
+      END;
+    END;
+
+    LOCAL PROCEDURE ReplaceRunObjectInMenuSuite@1100408000(VAR RenumberingSetup@1100408000 : Record 90000);
+    VAR
+      OldValue@1100408001 : Text;
+      NewValue@1100408002 : Text;
+    BEGIN
+      IF RenumberingSetup."Destination ID" = 0 THEN EXIT;
+      IF RenumberingSetup."Destination ID" = RenumberingSetup."Source ID" THEN EXIT;
+
+      OldValue := STRSUBSTNO('RunObjectID=%1',RenumberingSetup."Source ID");
+      NewValue := STRSUBSTNO('RunObjectID=%1',RenumberingSetup."Destination ID");
+      ReplaceObjectDataValue(ObjectData,OldValue,NewValue);
+    END;
+
+    LOCAL PROCEDURE ReplaceObjectDataValue@1100408004(ObjectDataLine@1100408002 : DotNet "'mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.String";OldValue@1100408001 : Text;NewValue@1100408000 : Text);
+    BEGIN
+      ObjectData := ObjectDataLine.Replace(OldValue,NewValue);
+    END;
+
+    PROCEDURE SaveObjectDataArrayToFile@1100408002();
+    VAR
+      Env@1100408002 : DotNet "'mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Environment";
+      FileName@1100408000 : Text;
+      LineNo@1100408001 : Integer;
+    BEGIN
+      FileName := FileMgt.SaveFileDialog(SaveObjectFile,FileName,TextFileFilter);
+      IF FileName = '' THEN EXIT;
+
+      Total := ObjectDataArray.Length;
+      Window.OPEN(
+        WritingFile + ' @1@@@@@@@@@@@@@@@@@@@@@@@@\' +
+        CurrentLine + ' #2#######\' +
+        NoOfLines + '#3#######');
+      Window.UPDATE(3,Total);
+      WindowLastUpdated := CURRENTDATETIME;
+
+      ObjectData := ObjectDataArray.GetValue(0);
+      ClientFile.WriteAllText(FileName,ObjectData.Concat(ObjectData,Env.NewLine),Encoding.GetEncoding('ibm850'));
+      FOR LineNo := 1 TO ObjectDataArray.Length - 1 DO BEGIN
+        ObjectData := ObjectDataArray.GetValue(LineNo);
+        ClientFile.AppendAllText(FileName,ObjectData.Concat(ObjectData,Env.NewLine),Encoding.GetEncoding('ibm850'));
+        IF CURRENTDATETIME - WindowLastUpdated > 1000 THEN BEGIN
+          Window.UPDATE(1,ROUND(LineNo / Total * 10000,1));
+          Window.UPDATE(2,LineNo);
+          WindowLastUpdated := CURRENTDATETIME;
+        END;
+      END;
+      Window.CLOSE;
+    END;
+
+    PROCEDURE ExportSetupToExcel@1100408007();
+    VAR
+      RenumberingSetup@1100408001 : Record 90000;
+      TempExcelBuffer@1100408000 : TEMPORARY Record 370;
+    BEGIN
+      TempExcelBuffer.INIT;
+      TempExcelBuffer.VALIDATE("Row No.",1);
+      TempExcelBuffer.VALIDATE("Column No.",1);
+      TempExcelBuffer."Cell Value as Text" := RenumberingSetup.FIELDCAPTION("Source Type");
+      TempExcelBuffer."Cell Type" := TempExcelBuffer."Cell Type"::Text;
+      TempExcelBuffer.INSERT;
+      TempExcelBuffer.VALIDATE("Column No.",2);
+      TempExcelBuffer."Cell Value as Text" := RenumberingSetup.FIELDCAPTION("Source ID");
+      TempExcelBuffer.INSERT;
+      TempExcelBuffer.VALIDATE("Column No.",3);
+      TempExcelBuffer."Cell Value as Text" := RenumberingSetup.FIELDCAPTION("Destination ID");
+      TempExcelBuffer.INSERT;
+
+      Total := RenumberingSetup.COUNT;
+      Counter := 0;
+      Window.OPEN(
+        WritingFile + ' @1@@@@@@@@@@@@@@@@@@@@@@@@\' +
+        CurrentLine + ' #2#######\' +
+        NoOfLines + '#3#######');
+      Window.UPDATE(3,Total);
+      WindowLastUpdated := CURRENTDATETIME;
+
+      IF RenumberingSetup.FINDSET THEN REPEAT
+        Counter += 1;
+        TempExcelBuffer.INIT;
+        TempExcelBuffer.VALIDATE("Row No.",Counter + 1);
+        TempExcelBuffer.VALIDATE("Column No.",1);
+        TempExcelBuffer."Cell Value as Text" := FORMAT(RenumberingSetup."Source Type",0,2);
+        TempExcelBuffer."Cell Type" := TempExcelBuffer."Cell Type"::Number;
+        TempExcelBuffer.INSERT;
+        TempExcelBuffer.VALIDATE("Column No.",2);
+        TempExcelBuffer."Cell Value as Text" := FORMAT(RenumberingSetup."Source ID",0,9);
+        TempExcelBuffer.INSERT;
+        TempExcelBuffer.VALIDATE("Column No.",3);
+        TempExcelBuffer."Cell Value as Text" := FORMAT(RenumberingSetup."Destination ID",0,9);
+        TempExcelBuffer.INSERT;
+        IF CURRENTDATETIME - WindowLastUpdated > 1000 THEN BEGIN
+          Window.UPDATE(1,ROUND(Counter / Total * 10000,1));
+          Window.UPDATE(2,Counter);
+          WindowLastUpdated := CURRENTDATETIME;
+        END;
+      UNTIL RenumberingSetup.NEXT = 0;
+      Window.CLOSE;
+
+      Window.OPEN(OpeningExcel);
+      TempExcelBuffer.CreateBookAndOpenExcel(RenumberLines,TABLECAPTION,TituloExcel,COMPANYNAME,USERID);
+      Window.CLOSE;
+    END;
+
+    PROCEDURE ImportSetupFromExcel@1100408016();
+    VAR
+      RenumberingSetup@1100408004 : Record 90000;
+      TempExcelBuffer@1100408002 : TEMPORARY Record 370;
+      FileName@1100408000 : Text;
+      ServerFileName@1100408001 : Text;
+      SheetName@1100408003 : Text;
+    BEGIN
+      FileName := FileMgt.OpenFileDialog(OpenExcelFile,FileName,ExcelFileFilter);
+      IF NOT FileMgt.ClientFileExists(FileName) THEN EXIT;
+      ServerFileName := FileMgt.UploadFileSilent(FileName);
+
+      SheetName := TempExcelBuffer.SelectSheetsName(ServerFileName);
+      TempExcelBuffer.OpenBook(ServerFileName,SheetName);
+      TempExcelBuffer.ReadSheet;
+      TempExcelBuffer.SETFILTER("Row No.",'>%1',1);
+      Total := TempExcelBuffer.COUNT;
+      Counter := 0;
+      Window.OPEN(
+        ReadingFile + ' @1@@@@@@@@@@@@@@@@@@@@@@@@\' +
+        CurrentLine + ' #2#######\' +
+        NoOfLines + '#3#######');
+      Window.UPDATE(3,Total);
+      WindowLastUpdated := CURRENTDATETIME;
+
+      IF TempExcelBuffer.FIND('-') THEN REPEAT
+        Counter += 1;
+        CASE TempExcelBuffer."Column No." OF
+          1 :
+            BEGIN
+              RenumberingSetup.INIT;
+              EVALUATE(RenumberingSetup."Source Type",TempExcelBuffer."Cell Value as Text");
+            END;
+          2 :
+            BEGIN
+              EVALUATE(RenumberingSetup."Source ID",TempExcelBuffer."Cell Value as Text");
+            END;
+          3 :
+            BEGIN
+              EVALUATE(RenumberingSetup."Destination ID",TempExcelBuffer."Cell Value as Text");
+              RenumberingSetup.INSERT;
+            END;
+        END;
+        IF CURRENTDATETIME - WindowLastUpdated > 1000 THEN BEGIN
+          Window.UPDATE(1,ROUND(Counter / Total * 10000,1));
+          Window.UPDATE(2,Counter);
+          WindowLastUpdated := CURRENTDATETIME;
+        END;
+      UNTIL TempExcelBuffer.NEXT = 0;
+      Window.CLOSE;
+    END;
+
+    LOCAL PROCEDURE CopyToTemp@1100408006(VAR RenumberingSetup@1100408000 : Record 90000;VAR TempRenumberingSetup@1100408001 : TEMPORARY Record 90000);
+    BEGIN
+      RenumberingSetup.SETFILTER("Destination ID",'<>%1',0);
+      RenumberingSetup.FINDSET;
+      REPEAT;
+        TempRenumberingSetup := RenumberingSetup;
+        TempRenumberingSetup.INSERT;
+      UNTIL RenumberingSetup.NEXT = 0;
+    END;
+
+    LOCAL PROCEDURE BuildPermissionRange@1100409000(VAR TempObject@1100408001 : TEMPORARY Record 2000000001;ObjectType@1100409000 : Option;HideDialog@1100408003 : Boolean);
+    VAR
+      PermissionRange@1100409002 : Record 2000000044;
+      RenumberingSetup@1100408002 : Record 90000;
+      Object@1100408000 : Record 2000000001;
+      ObjId@1100409003 : Integer;
+    BEGIN
+      IF NOT HideDialog THEN
+        Window.OPEN(FindAvailableObjects);
+      PermissionRange.SETRANGE("Object Type",ObjectType);
+      PermissionRange.SETRANGE(From,50000,99999);
+      TempObject.SETRANGE(Type,ObjectType);
+      TempObject.DELETEALL;
+      IF PermissionRange.FINDSET THEN
+        REPEAT
+          FOR ObjId := PermissionRange.From TO PermissionRange."To" DO BEGIN
+              Object.SETRANGE(Type,PermissionRange."Object Type");
+              Object.SETRANGE(ID,ObjId);
+              RenumberingSetup.SETRANGE("Source Type",PermissionRange."Object Type");
+              RenumberingSetup.SETRANGE("Destination ID",ObjId);
+              IF Object.ISEMPTY AND RenumberingSetup.ISEMPTY THEN BEGIN
+                TempObject.Type := ObjectType;
+                TempObject.ID := ObjId;
+                TempObject.Name := AvailableObject;
+                TempObject.Caption := AvailableObject;
+                TempObject.INSERT;
+              END;
+           END;
+        UNTIL PermissionRange.NEXT = 0;
+      IF NOT HideDialog THEN
+        Window.CLOSE;
+    END;
+
+    PROCEDURE SuggestIDsFromPermissionRange@1100408008();
+    VAR
+      RenumberingSetup@1100408000 : Record 90000;
+      TempObject@1100408002 : TEMPORARY Record 2000000001;
+      ObjectType@1100408001 : Option;
+    BEGIN
+      Window.OPEN(CreatingSuggestion + ' @1@@@@@@@@@@@@@@@@@@@@@@@@');
+      FOR ObjectType := "Source Type"::Table TO "Source Type"::Query DO BEGIN
+        RenumberingSetup.SETRANGE("Source Type",ObjectType);
+        RenumberingSetup.SETRANGE("Destination ID",0);
+        IF RenumberingSetup.FINDSET(TRUE) THEN BEGIN
+          TempObject.DELETEALL;
+          BuildPermissionRange(TempObject,ObjectType,TRUE);
+          REPEAT
+            IF TempObject.FINDFIRST THEN BEGIN
+              RenumberingSetup."Destination ID" := TempObject.ID;
+              RenumberingSetup.MODIFY;
+              TempObject.DELETE;
+            END;
+          UNTIL RenumberingSetup.NEXT = 0;
+        END;
+        Window.UPDATE(1,ROUND(ObjectType / "Source Type"::Query * 10000,1));
+      END;
+      Window.CLOSE;
+    END;
+
+    PROCEDURE NombreObjetoExistente@1170170000() : Text[50];
+    VAR
+      AllObj@1170170000 : Record 2000000038;
+    BEGIN
+      CASE "Source Type" OF
+        "Source Type"::Codeunit:
+          EXIT(BuscarNombreObjeto(AllObj."Object Type"::Codeunit,"Destination ID"));
+        "Source Type"::Dataport:
+          EXIT(TxtErrorDataport);
+        "Source Type"::Form:
+          EXIT(TxtErrorForm);
+        "Source Type"::MenuSuite:
+          EXIT(BuscarNombreObjeto(AllObj."Object Type"::MenuSuite,"Destination ID"));
+        "Source Type"::Page:
+          EXIT(BuscarNombreObjeto(AllObj."Object Type"::Page,"Destination ID"));
+        "Source Type"::Query:
+          EXIT(BuscarNombreObjeto(AllObj."Object Type"::Query,"Destination ID"));
+        "Source Type"::Report:
+          EXIT(BuscarNombreObjeto(AllObj."Object Type"::Report,"Destination ID"));
+        "Source Type"::Table:
+          EXIT(BuscarNombreObjeto(AllObj."Object Type"::Table,"Destination ID"));
+        "Source Type"::XMLport:
+          EXIT(BuscarNombreObjeto(AllObj."Object Type"::XMLport,"Destination ID"));
+        ELSE
+          EXIT(TxtErrorTipoObjeto);
+      END;
+    END;
+
+    LOCAL PROCEDURE BuscarNombreObjeto@1170170001(TipoObjeto@1170170000 : Integer;IdObjeto@1170170001 : Integer) : Text;
+    VAR
+      AllObj@1170170002 : Record 2000000038;
+    BEGIN
+      IF AllObj.GET(TipoObjeto,IdObjeto) THEN
+        EXIT(AllObj."Object Name")
+      ELSE
+        EXIT('');
+    END;
+
+    BEGIN
+    {
+      http://www.dynamics.is/wp-admin/post.php?post=2064
+    }
+    END.
+  }
+}
+
+OBJECT Page 90000 Object Renumbering
+{
+  OBJECT-PROPERTIES
+  {
+    Date=12/12/19;
+    Time=13:15:21;
+    Modified=Yes;
+    Version List=DYRN8.00;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Object Renumbering;
+    SourceTable=Table90000;
+    PageType=List;
+    ActionList=ACTIONS
+    {
+      { 1100408005;  ;ActionContainer;
+                      ActionContainerType=ActionItems }
+      { 1100408006;1 ;Action    ;
+                      Name=Read Object Lines;
+                      CaptionML=ENU=Read Object Lines;
+                      Promoted=Yes;
+                      Image=Import;
+                      PromotedCategory=Process;
+                      OnAction=BEGIN
+                                 LoadObjectDataIntoSetup;
+                               END;
+                                }
+      { 1100408010;1 ;Action    ;
+                      Name=Suggest IDs;
+                      CaptionML=ENU=Suggest IDs;
+                      Promoted=Yes;
+                      Image=Suggest;
+                      PromotedCategory=Process;
+                      OnAction=BEGIN
+                                 SuggestIDsFromPermissionRange;
+                               END;
+                                }
+      { 1100408007;1 ;Action    ;
+                      Name=Read from Excel;
+                      CaptionML=ENU=Read from Excel;
+                      Promoted=Yes;
+                      Image=Excel;
+                      PromotedCategory=Process;
+                      OnAction=BEGIN
+                                 ImportSetupFromExcel;
+                               END;
+                                }
+      { 1100408008;1 ;Action    ;
+                      Name=Write to Excel;
+                      CaptionML=ENU=Write to Excel;
+                      Promoted=Yes;
+                      Image=Excel;
+                      PromotedCategory=Process;
+                      OnAction=BEGIN
+                                 ExportSetupToExcel;
+                               END;
+                                }
+      { 1100408009;1 ;Action    ;
+                      Name=Update Object File;
+                      CaptionML=ENU=Update Object File;
+                      Promoted=Yes;
+                      Image=ReOpen;
+                      PromotedCategory=Process;
+                      OnAction=BEGIN
+                                 ReplaceObjectDataContent;
+                               END;
+                                }
+    }
+  }
+  CONTROLS
+  {
+    { 1100408000;0;Container;
+                ContainerType=ContentArea }
+
+    { 1100408001;1;Group  ;
+                Name=Group;
+                GroupType=Repeater }
+
+    { 1100408002;2;Field  ;
+                SourceExpr="Source Type" }
+
+    { 1100408003;2;Field  ;
+                SourceExpr="Source ID" }
+
+    { 1100408004;2;Field  ;
+                SourceExpr="Destination ID" }
+
+    { 1170170000;2;Field  ;
+                Name=Nombre objeto existente;
+                CaptionML=[ENU=Nombre objeto existente;
+                           ESP=Nombre objeto existente];
+                SourceExpr=NombreObjetoExistente }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    {
+      http://www.dynamics.is/wp-admin/post.php?post=2064
+    }
+    END.
+  }
+}
+

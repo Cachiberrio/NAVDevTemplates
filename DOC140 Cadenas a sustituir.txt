@@ -2,7 +2,6 @@
 <PluralDocumentName>
 <NombreDocumento>
 <nombreDocumento>
-<NombreDocumentoPlural>
 <nombreDocumentoPlural>
 DocumentName
 
