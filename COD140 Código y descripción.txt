@@ -17,10 +17,10 @@ OBJECT Table 7014455 <TableName>
   FIELDS
   {
     { 1   ;   ;Code                ;Code10        ;CaptionML=[ENU=Code;
-                                                              ESP=C¢digo];
+                                                              ESP=CÂ¢digo];
                                                    NotBlank=Yes }
     { 2   ;   ;Description         ;Text50        ;CaptionML=[ENU=Description;
-                                                              ESP=Descripci¢n] }
+                                                              ESP=DescripciÂ¢n] }
   }
   KEYS
   {
@@ -52,8 +52,10 @@ OBJECT Page 7014456 <TableName> List
     Editable=Yes;
     CaptionML=[ENU=<TableName> List;
                ESP=Lista <NombreTablaPlural>];
+    ApplicationArea=#Basic,#Suite;              
     SourceTable=Table7014455;
     PageType=List;
+    UsageCategory=Lists;    
   }
   CONTROLS
   {

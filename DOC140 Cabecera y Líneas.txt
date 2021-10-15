@@ -2,8 +2,8 @@ OBJECT Table 52000 <DocumentName> Header
 {
   OBJECT-PROPERTIES
   {
-    Date=01/10/20;
-    Time=12:00:00;
+    Date=16/08/21;
+    Time=14:00:00;
     Modified=Yes;
     Version List=DOCES8.00.00;
   }
@@ -13,8 +13,8 @@ OBJECT Table 52000 <DocumentName> Header
                DocumentNameSetup.GET;
                IF "No." = '' THEN BEGIN
                  DocumentNameSetup.TESTFIELD("<DocumentName> No. Series");
-                 NoSeriesMgt.InitSeries(DocumentNameSetup."<DocumentName> No. Series",xRec."No. Series",Date,"No.","No. Series");
-                 Date := TODAY;
+                 NoSeriesMgt.InitSeries(DocumentNameSetup."<DocumentName> No. Series",xRec."No. series","Posting Date","No.","No. series");
+                 "Posting Date" := TODAY;
                END;
                "Created By User Id." := USERID;
              END;
@@ -41,20 +41,20 @@ OBJECT Table 52000 <DocumentName> Header
     { 1   ;   ;No.                 ;Code20        ;CaptionML=[ENU=No.;
                                                               ESP=No.] }
     { 2   ;   ;Description         ;Text50        ;CaptionML=[ENU=Description;
-                                                              ESP=Descripci�n] }
+                                                              ESP=Descripci¢n] }
     { 4   ;   ;Created By User Id. ;Code20        ;TableRelation=User;
                                                    ValidateTableRelation=No;
                                                    TestTableRelation=No;
                                                    CaptionML=[ENU=Created By User Id.;
                                                               ESP=Creado por Id. usuario] }
-    { 6   ;   ;Date                ;Date          ;CaptionML=[ENU=Date;
-                                                              ESP=Fecha] }
+    { 6   ;   ;Posting Date        ;Date          ;CaptionML=[ENU=Posting Date;
+                                                              ESP=Fecha registro] }
     { 7   ;   ;Comment             ;Boolean       ;FieldClass=FlowField;
                                                    CalcFormula=Exist("<DocumentName> Comment Line" WHERE (Table Name=CONST(Header),
                                                                                                           Document No.=FIELD(No.)));
                                                    CaptionML=[ENU=Comment;
                                                               ESP=Comentario] }
-    { 8   ;   ;No. Series          ;Code10        ;TableRelation="No. Series";
+    { 8   ;   ;No. series          ;Code20        ;TableRelation="No. Series";
                                                    CaptionML=[ENU=No. Series;
                                                               ESP=No. serie] }
   }
@@ -77,7 +77,7 @@ OBJECT Table 52000 <DocumentName> Header
       WITH DocumentNameSetup DO BEGIN
         GET;
         TESTFIELD("<DocumentName> No. Series");
-        IF NoSeriesMgt.SelectSeries("<DocumentName> No. Series",AntParte."No. Series","No. Series") THEN BEGIN
+        IF NoSeriesMgt.SelectSeries("<DocumentName> No. Series",AntParte."No. series","No. series") THEN BEGIN
           GET;
           TESTFIELD("<DocumentName> No. Series");
           NoSeriesMgt.SetSeries("No.");
@@ -95,8 +95,8 @@ OBJECT Table 52001 Posted <DocumentName> Header
 {
   OBJECT-PROPERTIES
   {
-    Date=01/10/20;
-    Time=12:00:00;
+    Date=16/08/21;
+    Time=14:00:00;
     Modified=Yes;
     Version List=DOCES8.00.00;
   }
@@ -125,20 +125,20 @@ OBJECT Table 52001 Posted <DocumentName> Header
     { 1   ;   ;No.                 ;Code20        ;CaptionML=[ENU=No.;
                                                               ESP=No.] }
     { 2   ;   ;Description         ;Text50        ;CaptionML=[ENU=Description;
-                                                              ESP=Descripci�n] }
+                                                              ESP=Descripci¢n] }
     { 4   ;   ;Created By User Id. ;Code20        ;TableRelation=User;
                                                    ValidateTableRelation=No;
                                                    TestTableRelation=No;
                                                    CaptionML=[ENU=Created By User Id.;
                                                               ESP=Creado por Id. usuario] }
-    { 6   ;   ;Date                ;Date          ;CaptionML=[ENU=Date;
-                                                              ESP=Fecha] }
+    { 6   ;   ;Posting Date        ;Date          ;CaptionML=[ENU=Posting Date;
+                                                              ESP=Fecha regsitro] }
     { 7   ;   ;Comment             ;Boolean       ;FieldClass=FlowField;
                                                    CalcFormula=Exist("<DocumentName> Comment Line" WHERE (Table Name=CONST(Header),
                                                                                                           Document No.=FIELD(No.)));
                                                    CaptionML=[ENU=Comentario;
                                                               ESP=Comentario] }
-    { 8   ;   ;No. Series          ;Code10        ;TableRelation="No. Series";
+    { 8   ;   ;No. series          ;Code20        ;TableRelation="No. Series";
                                                    CaptionML=[ENU=No. Series;
                                                               ESP=No. serie] }
   }
@@ -162,8 +162,8 @@ OBJECT Table 52002 <DocumentName> Line
 {
   OBJECT-PROPERTIES
   {
-    Date=01/10/20;
-    Time=12:00:00;
+    Date=16/08/21;
+    Time=14:00:00;
     Modified=Yes;
     Version List=DOCES8.00.00;
   }
@@ -172,7 +172,7 @@ OBJECT Table 52002 <DocumentName> Line
     OnInsert=BEGIN
                GetDocumentNameHeader;
                IF Date = 0D THEN
-                 Date :=  DocumentNameHeader.Date
+                 Date :=  DocumentNameHeader."Posting Date"
              END;
 
     OnDelete=VAR
@@ -186,16 +186,16 @@ OBJECT Table 52002 <DocumentName> Line
              END;
 
     CaptionML=[ENU=<DocumentName> Line;
-               ESP=L�nea <NombreDocumento>];
+               ESP=L¡nea <NombreDocumento>];
   }
   FIELDS
   {
     { 1   ;   ;Document No.        ;Code20        ;CaptionML=[ENU=Document No.;
                                                               ESP=No. documento] }
     { 2   ;   ;Line No.            ;Integer       ;CaptionML=[ENU=Line No.;
-                                                              ESP=No. l�nea] }
+                                                              ESP=No. l¡nea] }
     { 4   ;   ;Description         ;Text50        ;CaptionML=[ENU=Description;
-                                                              ESP=Descripci�n] }
+                                                              ESP=Descripci¢n] }
     { 6   ;   ;Date                ;Date          ;CaptionML=[ENU=Date;
                                                               ESP=Fecha] }
   }
@@ -226,8 +226,8 @@ OBJECT Table 52003 Posted <DocumentName> Line
 {
   OBJECT-PROPERTIES
   {
-    Date=01/10/20;
-    Time=12:00:00;
+    Date=16/08/21;
+    Time=14:00:00;
     Modified=Yes;
     Version List=DOCES8.00.00;
   }
@@ -244,16 +244,16 @@ OBJECT Table 52003 Posted <DocumentName> Line
              END;
 
     CaptionML=[ENU=Posted <DocumentName> Line;
-               ESP=Hist. l�nea <NombreDocumento>];
+               ESP=Hist. l¡nea <NombreDocumento>];
   }
   FIELDS
   {
     { 1   ;   ;Document No.        ;Code20        ;CaptionML=[ENU=Document No.;
                                                               ESP=No. documento] }
     { 2   ;   ;Line No.            ;Integer       ;CaptionML=[ENU=Line No.;
-                                                              ESP=No. l�nea] }
+                                                              ESP=No. l¡nea] }
     { 4   ;   ;Description         ;Text50        ;CaptionML=[ENU=Description;
-                                                              ESP=Descripci�n] }
+                                                              ESP=Descripci¢n] }
     { 6   ;   ;Date                ;Date          ;CaptionML=[ENU=Date;
                                                               ESP=Fecha] }
   }
@@ -276,8 +276,8 @@ OBJECT Table 52004 <DocumentName> Setup
 {
   OBJECT-PROPERTIES
   {
-    Date=01/10/20;
-    Time=12:00:00;
+    Date=16/08/21;
+    Time=14:00:00;
     Modified=Yes;
     Version List=DOCES8.00.00;
   }
@@ -291,8 +291,8 @@ OBJECT Table 52004 <DocumentName> Setup
     { 1   ;   ;Primary Key         ;Code10        ;CaptionML=[ENU=Primary Key;
                                                               ESP=Clave primaria] }
     { 2   ;   ;<DocumentName> No. Series;Code10   ;TableRelation="No. Series";
-                                                   CaptionML=[ENU=Document No. Series;
-                                                              ESP=No. serie documentos] }
+                                                   CaptionML=[ENU=<DocumentName> No. Series;
+                                                              ESP=No. serie <NombreDocumento>] }
   }
   KEYS
   {
@@ -313,31 +313,31 @@ OBJECT Table 52005 <DocumentName> Comment Line
 {
   OBJECT-PROPERTIES
   {
-    Date=01/10/20;
-    Time=12:00:00;
+    Date=16/08/21;
+    Time=14:00:00;
     Modified=Yes;
     Version List=DOCES8.00.00;
   }
   PROPERTIES
   {
     CaptionML=[ENU=<DocumentName> Comment Line;
-               ESP=L�n. comentario <NombreDocumento>];
+               ESP=L¡n. comentario <NombreDocumento>];
   }
   FIELDS
   {
     { 1   ;   ;Table Name          ;Option        ;CaptionML=[ENU=Table Name;
                                                               ESP=Nombre tabla];
                                                    OptionCaptionML=[ENU=Header,Line;
-                                                                    ESP=Cabecera,L�nea];
+                                                                    ESP=Cabecera,L¡nea];
                                                    OptionString=Header,Line }
     { 2   ;   ;Document No.        ;Code10        ;CaptionML=[ENU=Document No.;
                                                               ESP=No. documento] }
     { 3   ;   ;Document Line No.   ;Integer       ;CaptionML=[ENU=Document Line No.;
-                                                              ESP=No. l�nea documento] }
+                                                              ESP=No. l¡nea documento] }
     { 4   ;   ;Code                ;Code10        ;CaptionML=[ENU=Code;
                                                               ESP=C�digo] }
     { 5   ;   ;Line No.            ;Integer       ;CaptionML=[ENU=Line No.;
-                                                              ESP=No. l�nea] }
+                                                              ESP=No. l¡nea] }
     { 6   ;   ;Date                ;Date          ;CaptionML=[ENU=Date;
                                                               ESP=Fecha] }
     { 7   ;   ;Comment             ;Text80        ;CaptionML=[ENU=Comment;
@@ -375,13 +375,15 @@ OBJECT Report 52000 <DocumentName>
 {
   OBJECT-PROPERTIES
   {
-    Date=01/10/20;
-    Time=12:00:00;
+    Date=16/08/21;
+    Time=14:00:00;
     Modified=Yes;
     Version List=DOCES8.00.00;
   }
   PROPERTIES
   {
+    ApplicationArea=#Basic,#Suite;
+    UsageCategory=ReportsAndAnalysis;
   }
   DATASET
   {
@@ -398,7 +400,7 @@ OBJECT Report 52000 <DocumentName>
                SourceExpr="<DocumentName> Header"."Created By User Id." }
 
     { 1170170004;1;Column;DocumentHeaderDate ;
-               SourceExpr="<DocumentName> Header".Date }
+               SourceExpr="<DocumentName> Header"."Posting Date" }
 
     { 1170170005;1;DataItem;                 ;
                DataItemTable=Table52002;
@@ -503,13 +505,15 @@ OBJECT Report 52001 Posted <DocumentName>
 {
   OBJECT-PROPERTIES
   {
-    Date=01/10/20;
-    Time=12:00:00;
+    Date=16/08/21;
+    Time=14:00:00;
     Modified=Yes;
     Version List=DOCES8.00.00;
   }
   PROPERTIES
   {
+    ApplicationArea=#Basic,#Suite;
+    UsageCategory=ReportsAndAnalysis;
   }
   DATASET
   {
@@ -526,7 +530,7 @@ OBJECT Report 52001 Posted <DocumentName>
                SourceExpr="Posted <DocumentName> Header"."Created By User Id." }
 
     { 1170170004;1;Column;PostedDocumentHeaderDate;
-               SourceExpr="Posted <DocumentName> Header".Date }
+               SourceExpr="Posted <DocumentName> Header"."Posting Date" }
 
     { 1170170005;1;DataItem;                 ;
                DataItemTable=Table52003;
@@ -631,8 +635,8 @@ OBJECT Codeunit 52000 Post <DocumentName> Yes/No
 {
   OBJECT-PROPERTIES
   {
-    Date=01/10/20;
-    Time=12:00:00;
+    Date=16/08/21;
+    Time=14:00:00;
     Modified=Yes;
     Version List=DOCES8.00.00;
   }
@@ -649,7 +653,7 @@ OBJECT Codeunit 52000 Post <DocumentName> Yes/No
   CODE
   {
     VAR
-      Text001@1001 : TextConst 'ENU=Do you really want to post the document?;ESP=�Confirma que desea registrar el documento?';
+      Text001@1001 : TextConst 'ENU=Do you really want to post the document?;ESP=�Confirma que desea registrar el documento?';
       DocumentNameHeader@1003 : Record 52000;
 
     LOCAL PROCEDURE Code@1();
@@ -673,8 +677,8 @@ OBJECT Codeunit 52001 Post <DocumentName>
 {
   OBJECT-PROPERTIES
   {
-    Date=01/10/20;
-    Time=12:00:00;
+    Date=16/08/21;
+    Time=14:00:00;
     Modified=Yes;
     Version List=DOCES8.00.00;
   }
@@ -710,9 +714,9 @@ OBJECT Codeunit 52001 Post <DocumentName>
             CLEARALL;
             DocumentNameHeader := Rec;
             WITH DocumentNameHeader DO BEGIN
-              TESTFIELD(Date);
-              IF GenJnlCheckLine.DateNotAllowed(Date) THEN
-                FIELDERROR(Date,Text003);
+              TESTFIELD("Posting Date");
+              IF GenJnlCheckLine.DateNotAllowed("Posting Date") THEN
+                FIELDERROR("Posting Date",Text003);
               Window.OPEN(Text004 + Text005);
               DocumentNameHeaderProcess;
               DocumentNameLinesProcess;
@@ -726,18 +730,20 @@ OBJECT Codeunit 52001 Post <DocumentName>
   {
     VAR
       Text001@1000 : TextConst 'ENU=There is nothing to post.;ESP=No hay nada que registrar.';
-      Text002@1001 : TextConst 'ENU=Posting lines              #2######\;ESP=Registrando l�neas         #2######\';
+      Text002@1001 : TextConst 'ENU=Posting lines              #2######\;ESP=Registrando l¡neas         #2######\';
       DocumentNameHeader@1170170000 : Record 52000;
       GenJnlCheckLine@1158 : Codeunit 11;
-      Text003@1157 : TextConst 'ENU=is not within your range of allowed posting dates.;ESP=no est� dentro del periodo de fechas de registro permitidas.';
+      Text003@1157 : TextConst 'ENU=is not within your range of allowed posting dates.;ESP=no est� dentro del periodo de fechas de registro permitidas.';
       Text004@1170170001 : TextConst 'ENU=Posting <DocumentName>;ESP=Registrando <NombreDocumento>...\';
-      Text005@1170170002 : TextConst 'ENU=Processing Lines #1###;ESP=Procesando l�neas #1###';
+      Text005@1170170002 : TextConst 'ENU=Processing Lines #1###;ESP=Procesando l¡neas #1###';
       Window@1170170005 : Dialog;
       Total@1170170003 : Integer;
       Partial@1170170004 : Integer;
 
     LOCAL PROCEDURE DocumentNameHeaderProcess@1170170001();
     BEGIN
+      OnBeforeDocumentNameHeaderProcess(DocumentNameHeader);
+      OnAfterDocumentNameHeaderProcess(DocumentNameHeader);
     END;
 
     LOCAL PROCEDURE DocumentNameLinesProcess@1170170002();
@@ -749,10 +755,15 @@ OBJECT Codeunit 52001 Post <DocumentName>
       IF DocumentNameLine.FINDSET THEN BEGIN
         Total := DocumentNameLine.COUNT;
         Partial := 0;
+        OnBeforeDocumentNameLinesProcess(DocumentNameHeader);
         REPEAT
           Partial += 1;
           Window.UPDATE(1,ROUND(10000 * Partial / Total,1));
+          OnBeforeDocumentNameLineProcess(DocumentNameHeader,DocumentNameLine);
+
+          OnAfterDocumentNameLineProcess(DocumentNameHeader,DocumentNameLine);
         UNTIL DocumentNameLine.NEXT = 0;
+        OnAfterDocumentNameLinesProcess(DocumentNameHeader);
       END ELSE
         ERROR(Text001);
     END;
@@ -763,6 +774,7 @@ OBJECT Codeunit 52001 Post <DocumentName>
       DocumentNameLine@1170170002 : Record 52002;
       PostedDocumentNameLine@1170170001 : Record 52003;
     BEGIN
+      OnBeforeCreatePostedDocumentName(DocumentNameHeader);
       PostedDocumentNameHeader.TRANSFERFIELDS(DocumentNameHeader);
       PostedDocumentNameHeader.INSERT;
 
@@ -771,14 +783,78 @@ OBJECT Codeunit 52001 Post <DocumentName>
       IF DocumentNameLine.FINDSET THEN
         REPEAT
           PostedDocumentNameLine.TRANSFERFIELDS(DocumentNameLine);
+          OnBeforeCreatePostedDocumentNameLine(DocumentNameLine);
           PostedDocumentNameLine.INSERT;
+          OnAfterCreatePostedDocumentNameLine(DocumentNameLine,PostedDocumentNameLine);
         UNTIL DocumentNameLine.NEXT = 0;
+      OnAfterCreatePostedDocumentName(DocumentNameHeader,PostedDocumentNameHeader);
     END;
 
     LOCAL PROCEDURE DeleteDocumentName@1170170005();
     VAR
+      DocumentNameLine@1170170000 : Record 52002;
+      DocumentNameCommentLine@1170170001 : Record 52005;
     BEGIN
-      DocumentNameHeader.DELETE(TRUE);
+      DocumentNameHeader.DELETE;
+
+      DocumentNameLine.SETRANGE("Document No.",DocumentNameHeader."No.");
+      DocumentNameLine.DELETEALL;
+
+      DocumentNameCommentLine.SETRANGE("Table Name",DocumentNameCommentLine."Table Name"::Header);
+      DocumentNameCommentLine.SETRANGE("Document No.",DocumentNameHeader."No.");
+      DocumentNameCommentLine.DELETEALL;
+      DocumentNameCommentLine.SETRANGE("Table Name",DocumentNameCommentLine."Table Name"::Line);
+      DocumentNameCommentLine.DELETEALL;
+    END;
+
+    [Integration]
+    LOCAL PROCEDURE OnBeforeDocumentNameHeaderProcess@1170170000(VAR DocumentNameHeader@1170170000 : Record 52000);
+    BEGIN
+    END;
+
+    [Integration]
+    LOCAL PROCEDURE OnAfterDocumentNameHeaderProcess@1170170004(VAR DocumentNameHeader@1170170000 : Record 52000);
+    BEGIN
+    END;
+
+    [Integration]
+    LOCAL PROCEDURE OnBeforeDocumentNameLinesProcess@1170170006(VAR DocumentNameHeader@1170170000 : Record 52000);
+    BEGIN
+    END;
+
+    [Integration]
+    LOCAL PROCEDURE OnAfterDocumentNameLinesProcess@1170170007(VAR DocumentNameHeader@1170170000 : Record 52000);
+    BEGIN
+    END;
+
+    [Integration]
+    LOCAL PROCEDURE OnBeforeDocumentNameLineProcess@1170170008(VAR DocumentNameHeader@1170170000 : Record 52000;VAR DocumentNameLine@1170170001 : Record 52002);
+    BEGIN
+    END;
+
+    [Integration]
+    LOCAL PROCEDURE OnAfterDocumentNameLineProcess@1170170009(VAR DocumentNameHeader@1170170000 : Record 52000;VAR DocumentNameLine@1170170001 : Record 52002);
+    BEGIN
+    END;
+
+    [Integration]
+    LOCAL PROCEDURE OnBeforeCreatePostedDocumentNameLine@1170170010(VAR DocumentNameLine@1170170000 : Record 52002);
+    BEGIN
+    END;
+
+    [Integration]
+    LOCAL PROCEDURE OnAfterCreatePostedDocumentNameLine@1170170011(VAR DocumentNameLine@1170170001 : Record 52002;VAR PostedDocumentNameLine@1170170000 : Record 52003);
+    BEGIN
+    END;
+
+    [Integration]
+    LOCAL PROCEDURE OnBeforeCreatePostedDocumentName@1170170012(VAR DocumentNameHeader@1170170000 : Record 52000);
+    BEGIN
+    END;
+
+    [Integration]
+    LOCAL PROCEDURE OnAfterCreatePostedDocumentName@1170170013(VAR DocumentNameHeader@1170170000 : Record 52000;VAR PostedDocumentNameHeader@1170170001 : Record 52001);
+    BEGIN
     END;
 
     BEGIN
@@ -790,8 +866,8 @@ OBJECT Codeunit 91000 Library - <DocumentName>
 {
   OBJECT-PROPERTIES
   {
-    Date=07/10/20;
-    Time=16:06:13;
+    Date=16/08/21;
+    Time=14:00:00;
     Modified=Yes;
     Version List=DOCES8.00.00;
   }
@@ -818,7 +894,7 @@ OBJECT Codeunit 91000 Library - <DocumentName>
         INSERT(TRUE);
         Description := LibraryUtility.GenerateRandomText(MAXSTRLEN(Description));
         "Created By User Id." := USERID;
-        Date := WORKDATE;
+        "Posting Date" := WORKDATE;
         MODIFY(TRUE);
       END;
     END;
@@ -882,8 +958,8 @@ OBJECT Codeunit 91001 Test <DocumentName>
 {
   OBJECT-PROPERTIES
   {
-    Date=07/10/20;
-    Time=16:12:38;
+    Date=16/08/21;
+    Time=14:00:00;
     Modified=Yes;
     Version List=DOCES8.00.00;
   }
@@ -929,8 +1005,8 @@ OBJECT Codeunit 91001 Test <DocumentName>
         GET(DocumentNameHeader."No.");
         TESTFIELD(Description,DocumentNameHeader.Description);
         TESTFIELD("Created By User Id.",DocumentNameHeader."Created By User Id.");
-        TESTFIELD(Date,DocumentNameHeader.Date);
-        TESTFIELD("No. Series",DocumentNameHeader."No. Series");
+        TESTFIELD("Posting Date",DocumentNameHeader."Posting Date");
+        TESTFIELD("No. series",DocumentNameHeader."No. series");
         TestPostedDocumentNameLines(DocumentNameHeader,ArrayDocumentNameLine);
       END;
     END;
@@ -959,15 +1035,15 @@ OBJECT Page 52001 <DocumentName> Line Subform
 {
   OBJECT-PROPERTIES
   {
-    Date=01/10/20;
-    Time=12:00:00;
+    Date=16/08/21;
+    Time=14:00:00;
     Modified=Yes;
     Version List=DOCES8.00.00;
   }
   PROPERTIES
   {
     CaptionML=[ENU=<DocumentName> Lines Subform;
-               ESP=L�n. <NombreDocumento> subform];
+               ESP=L¡n. <NombreDocumento> subform];
     SaveValues=Yes;
     MultipleNewLines=Yes;
     SourceTable=Table52002;
@@ -980,11 +1056,12 @@ OBJECT Page 52001 <DocumentName> Line Subform
                       ActionContainerType=ActionItems }
       { 1170170003;1 ;ActionGroup;
                       CaptionML=[ENU=&Line;
-                                 ESP=&L�nea];
+                                 ESP=&L¡nea];
                       Image=Line }
       { 1170170005;2 ;Action    ;
                       CaptionML=[ENU=C&omments;
                                  ESP=C&omentarios];
+                      ApplicationArea=#Basic,#Suite;
                       RunObject=Page 52008;
                       RunPageLink=Table Name=CONST(Line),
                                   Document No.=FIELD(Document No.),
@@ -1002,9 +1079,11 @@ OBJECT Page 52001 <DocumentName> Line Subform
                 GroupType=Repeater }
 
     { 1170170002;2;Field  ;
+                ApplicationArea=#Basic,#Suite;
                 SourceExpr=Date }
 
     { 1170170004;2;Field  ;
+                ApplicationArea=#Basic,#Suite;
                 SourceExpr=Description }
 
   }
@@ -1020,8 +1099,8 @@ OBJECT Page 52002 <DocumentName>
 {
   OBJECT-PROPERTIES
   {
-    Date=01/10/20;
-    Time=12:00:00;
+    Date=16/08/21;
+    Time=14:00:00;
     Modified=Yes;
     Version List=DOCES8.00.00;
   }
@@ -1057,6 +1136,7 @@ OBJECT Page 52002 <DocumentName>
                       Ellipsis=Yes;
                       CaptionML=[ENU=P&ost;
                                  ESP=&Registrar];
+                      ApplicationArea=#Basic,#Suite;
                       Promoted=Yes;
                       PromotedIsBig=Yes;
                       Image=PostOrder;
@@ -1077,25 +1157,31 @@ OBJECT Page 52002 <DocumentName>
                 GroupType=Group }
 
     { 1170170002;2;Field  ;
+                ApplicationArea=#Basic,#Suite;
                 SourceExpr="No.";
                 OnAssistEdit=BEGIN
-                               AssistEdit(Rec);
+                               IF AssistEdit(xRec) THEN
+                                 CurrPage.UPDATE;
                              END;
                               }
 
     { 1170170003;2;Field  ;
+                ApplicationArea=#Basic,#Suite;
                 SourceExpr=Description }
 
     { 1170170004;2;Field  ;
+                ApplicationArea=#Basic,#Suite;
                 SourceExpr="Created By User Id." }
 
     { 1170170005;2;Field  ;
-                SourceExpr=Date }
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Posting Date" }
 
     { 1170170007;1;Part   ;
                 Name=Lines;
                 CaptionML=[ENU=Lines;
-                           ESP=L�neas];
+                           ESP=L¡neas];
+                ApplicationArea=#Basic,#Suite;
                 SubPageLink=Document No.=FIELD(No.);
                 PagePartID=Page52001;
                 PartType=Page }
@@ -1113,8 +1199,8 @@ OBJECT Page 52003 <DocumentName> List
 {
   OBJECT-PROPERTIES
   {
-    Date=07/10/20;
-    Time=15:35:09;
+    Date=16/08/21;
+    Time=14:00:00;
     Modified=Yes;
     Version List=DOCES8.00.00;
   }
@@ -1123,8 +1209,10 @@ OBJECT Page 52003 <DocumentName> List
     Editable=No;
     CaptionML=[ENU=<DocumentName> List;
                ESP=Lista <nombreDocumentoPlural>];
+    ApplicationArea=#Basic,#Suite;
     SourceTable=Table52000;
     PageType=List;
+    UsageCategory=Documents;
     CardPageID=<DocumentName>;
     ActionList=ACTIONS
     {
@@ -1133,6 +1221,7 @@ OBJECT Page 52003 <DocumentName> List
       { 1170170006;1 ;Action    ;
                       CaptionML=[ENU=Comments;
                                  ESP=Comentarios];
+                      ApplicationArea=#Basic,#Suite;
                       RunObject=Page 52008;
                       RunPageLink=Table Name=CONST(Header),
                                   Document No.=FIELD(No.);
@@ -1152,15 +1241,19 @@ OBJECT Page 52003 <DocumentName> List
                 GroupType=Repeater }
 
     { 1170170002;2;Field  ;
+                ApplicationArea=#Basic,#Suite;
                 SourceExpr="No." }
 
     { 1170170003;2;Field  ;
+                ApplicationArea=#Basic,#Suite;
                 SourceExpr=Description }
 
     { 1170170004;2;Field  ;
-                SourceExpr=Date }
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Posting Date" }
 
     { 1170170005;2;Field  ;
+                ApplicationArea=#Basic,#Suite;
                 SourceExpr="Created By User Id." }
 
   }
@@ -1176,15 +1269,15 @@ OBJECT Page 52004 Posted <DocumentName> Subform
 {
   OBJECT-PROPERTIES
   {
-    Date=01/10/20;
-    Time=12:00:00;
+    Date=16/08/21;
+    Time=14:00:00;
     Modified=Yes;
     Version List=DOCES8.00.00;
   }
   PROPERTIES
   {
     CaptionML=[ENU=Lines;
-               ESP=L�neas];
+               ESP=L¡neas];
     MultipleNewLines=Yes;
     SourceTable=Table52003;
     DelayedInsert=Yes;
@@ -1196,11 +1289,12 @@ OBJECT Page 52004 Posted <DocumentName> Subform
                       ActionContainerType=ActionItems }
       { 1170170014;1 ;ActionGroup;
                       CaptionML=[ENU=&Line;
-                                 ESP=&L�nea];
+                                 ESP=&L¡nea];
                       Image=Line }
       { 1170170003;2 ;Action    ;
                       CaptionML=[ENU=C&omments;
                                  ESP=C&omentarios];
+                      ApplicationArea=#Basic,#Suite;
                       RunObject=Page 52008;
                       RunPageLink=Table Name=CONST(3),
                                   Document No.=FIELD(Document No.),
@@ -1218,9 +1312,11 @@ OBJECT Page 52004 Posted <DocumentName> Subform
                 GroupType=Repeater }
 
     { 1170170002;2;Field  ;
+                ApplicationArea=#Basic,#Suite;
                 SourceExpr=Date }
 
     { 1170170004;2;Field  ;
+                ApplicationArea=#Basic,#Suite;
                 SourceExpr=Description }
 
   }
@@ -1236,8 +1332,8 @@ OBJECT Page 52005 Posted <DocumentName>
 {
   OBJECT-PROPERTIES
   {
-    Date=01/10/20;
-    Time=12:00:00;
+    Date=16/08/21;
+    Time=14:00:00;
     Modified=Yes;
     Version List=DOCES8.00.00;
   }
@@ -1255,6 +1351,7 @@ OBJECT Page 52005 Posted <DocumentName>
       { 1170170008;1 ;Action    ;
                       CaptionML=[ENU=Comments;
                                  ESP=Comentarios];
+                      ApplicationArea=#Basic,#Suite;
                       RunObject=Page 52008;
                       RunPageLink=Table Name=CONST(2),
                                   Document No.=FIELD(No.);
@@ -1274,18 +1371,23 @@ OBJECT Page 52005 Posted <DocumentName>
                 GroupType=Group }
 
     { 1170170002;2;Field  ;
+                ApplicationArea=#Basic,#Suite;
                 SourceExpr="No." }
 
     { 1170170003;2;Field  ;
+                ApplicationArea=#Basic,#Suite;
                 SourceExpr=Description }
 
     { 1170170004;2;Field  ;
+                ApplicationArea=#Basic,#Suite;
                 SourceExpr="Created By User Id." }
 
     { 1170170005;2;Field  ;
-                SourceExpr=Date }
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Posting Date" }
 
     { 1170170007;1;Part   ;
+                ApplicationArea=#Basic,#Suite;
                 SubPageLink=Document No.=FIELD(No.);
                 PagePartID=Page52004;
                 PartType=Page }
@@ -1303,8 +1405,8 @@ OBJECT Page 52006 Posted <DocumentName> List
 {
   OBJECT-PROPERTIES
   {
-    Date=07/10/20;
-    Time=15:33:58;
+    Date=16/08/21;
+    Time=14:00:00;
     Modified=Yes;
     Version List=DOCES8.00.00;
   }
@@ -1313,8 +1415,10 @@ OBJECT Page 52006 Posted <DocumentName> List
     Editable=No;
     CaptionML=[ENU=Posted <PluralDocumentName> List;
                ESP=Lista hist. <nombreDocumentoPlural>];
+    ApplicationArea=#Basic,#Suite;
     SourceTable=Table52001;
     PageType=List;
+    UsageCategory=History;
     CardPageID=Posted <DocumentName>;
     ActionList=ACTIONS
     {
@@ -1323,6 +1427,7 @@ OBJECT Page 52006 Posted <DocumentName> List
       { 1170170007;1 ;Action    ;
                       CaptionML=[ENU=Comments;
                                  ESP=Comentarios];
+                      ApplicationArea=#Basic,#Suite;
                       RunObject=Page 52008;
                       RunPageLink=Table Name=CONST(2),
                                   Document No.=FIELD(No.);
@@ -1342,15 +1447,19 @@ OBJECT Page 52006 Posted <DocumentName> List
                 GroupType=Repeater }
 
     { 1170170002;2;Field  ;
+                ApplicationArea=#Basic,#Suite;
                 SourceExpr="No." }
 
     { 1170170003;2;Field  ;
+                ApplicationArea=#Basic,#Suite;
                 SourceExpr=Description }
 
     { 1170170004;2;Field  ;
-                SourceExpr=Date }
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Posting Date" }
 
     { 1170170005;2;Field  ;
+                ApplicationArea=#Basic,#Suite;
                 SourceExpr="Created By User Id." }
 
   }
@@ -1366,8 +1475,8 @@ OBJECT Page 52007 <DocumentName> Setup
 {
   OBJECT-PROPERTIES
   {
-    Date=07/10/20;
-    Time=15:34:38;
+    Date=16/08/21;
+    Time=14:00:00;
     Modified=Yes;
     Version List=DOCES8.00.00;
   }
@@ -1375,8 +1484,10 @@ OBJECT Page 52007 <DocumentName> Setup
   {
     CaptionML=[ENU=<Documents> Sertup;
                ESP=Configuraci�n <nombreDocumento>];
+    ApplicationArea=#Basic,#Suite;
     SourceTable=Table52004;
     PageType=Card;
+    UsageCategory=Administration;
     OnOpenPage=BEGIN
                  RESET;
                  IF NOT GET THEN BEGIN
@@ -1396,6 +1507,7 @@ OBJECT Page 52007 <DocumentName> Setup
                 GroupType=Group }
 
     { 1170170002;2;Field  ;
+                ApplicationArea=#Basic,#Suite;
                 SourceExpr="<DocumentName> No. Series" }
 
   }
@@ -1411,8 +1523,8 @@ OBJECT Page 52008 <DocumentName> Comment Sheet
 {
   OBJECT-PROPERTIES
   {
-    Date=07/10/20;
-    Time=15:34:51;
+    Date=16/08/21;
+    Time=14:00:00;
     Modified=Yes;
     Version List=DOCES8.00.00;
   }
@@ -1442,12 +1554,15 @@ OBJECT Page 52008 <DocumentName> Comment Sheet
                 GroupType=Repeater }
 
     { 1170170003;2;Field  ;
+                ApplicationArea=#Basic,#Suite;
                 SourceExpr=Date }
 
     { 1170170004;2;Field  ;
+                ApplicationArea=#Basic,#Suite;
                 SourceExpr=Comment }
 
     { 1170170002;2;Field  ;
+                ApplicationArea=#Basic,#Suite;
                 SourceExpr=Code;
                 Visible=FALSE }
 

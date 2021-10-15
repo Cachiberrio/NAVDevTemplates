@@ -1,9 +1,7 @@
 DIAES14.00 Cadenas a sustituir
 =================================
-<JournalName>
-<NombreDiario>
-<nombrediario>
-JournalName
+<Funcionality>
+<funcionalidad>
 
 Sustitución de caracteres extraños
 ======================================
@@ -12,8 +10,6 @@ Sustitución de caracteres extraños
 "í" = "¡"
 "ó" = "¢"
 'ú" = "£"
-
-µÖàé
 
 "Á" = "µ"
 "É" = ""

@@ -1,0 +1,825 @@
+OBJECT Table 52150 Tabla vertical
+{
+  OBJECT-PROPERTIES
+  {
+    Date=08/11/17;
+    Time=12:24:14;
+    Modified=Yes;
+    Version List=MAT;
+  }
+  PROPERTIES
+  {
+    CaptionML=[ENU=Tabla vertical;
+               ESP=Tabla vertical];
+  }
+  FIELDS
+  {
+    { 1   ;   ;C¢digo              ;Code20        ;CaptionML=ESP=C¢digo }
+    { 2   ;   ;Descripci¢n         ;Text30        ;CaptionML=ESP=Descripci¢n }
+    { 3   ;   ;Filtro tabla horizontal;Code20     ;FieldClass=FlowFilter;
+                                                   CaptionML=ESP=Filtro tabla horizontal }
+    { 4   ;   ;Filtro fecha        ;Date          ;FieldClass=FlowFilter;
+                                                   CaptionML=ESP=Filtro fecha }
+    { 5   ;   ;Campo calculado     ;Decimal       ;FieldClass=FlowField;
+                                                   CalcFormula=Sum("Tabla movimientos".Cantidad WHERE (C¢d. tabla vertical=FIELD(C¢digo),
+                                                                                                       C¢d. tabla horizontal=FIELD(Filtro tabla horizontal),
+                                                                                                       Fecha registro=FIELD(Filtro fecha)));
+                                                   CaptionML=ESP=Campo calculado }
+  }
+  KEYS
+  {
+    {    ;C¢digo                                  ;Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+
+OBJECT Table 52151 Tabla horizontal
+{
+  OBJECT-PROPERTIES
+  {
+    Date=08/11/17;
+    Time=11:51:00;
+    Modified=Yes;
+    Version List=MAT;
+  }
+  PROPERTIES
+  {
+    CaptionML=[ENU=Tabla horizontal;
+               ESP=Tabla horizontal];
+  }
+  FIELDS
+  {
+    { 1   ;   ;C¢digo              ;Code20        ;CaptionML=ESP=C¢digo }
+    { 2   ;   ;Descripci¢n         ;Text30        ;CaptionML=ESP=Descripci¢n }
+  }
+  KEYS
+  {
+    {    ;C¢digo                                  ;Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+
+OBJECT Table 52152 Tabla movimientos
+{
+  OBJECT-PROPERTIES
+  {
+    Date=08/11/17;
+    Time=13:27:09;
+    Modified=Yes;
+    Version List=MAT;
+  }
+  PROPERTIES
+  {
+    LookupPageID=Page52152;
+    DrillDownPageID=Page52152;
+  }
+  FIELDS
+  {
+    { 1   ;   ;No. mov.            ;Integer       ;CaptionML=ESP=No. mov. }
+    { 2   ;   ;C¢d. tabla vertical ;Code20        ;TableRelation="Tabla vertical";
+                                                   CaptionML=ESP=C¢d. tabla vertical }
+    { 3   ;   ;C¢d. tabla horizontal;Code20       ;TableRelation="Tabla horizontal";
+                                                   CaptionML=ESP=C¢d. tabla horizontal }
+    { 4   ;   ;Fecha registro      ;Date          ;CaptionML=ESP=Fecha registro }
+    { 5   ;   ;Cantidad            ;Decimal       ;CaptionML=ESP=Cantidad }
+  }
+  KEYS
+  {
+    {    ;No. mov.                                ;Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+
+OBJECT Page 52150 Tabla vertical
+{
+  OBJECT-PROPERTIES
+  {
+    Date=08/11/17;
+    Time=13:26:28;
+    Modified=Yes;
+    Version List=MAT;
+  }
+  PROPERTIES
+  {
+    SourceTable=Table52150;
+    PageType=List;
+  }
+  CONTROLS
+  {
+    { 1170170000;0;Container;
+                ContainerType=ContentArea }
+
+    { 1170170001;1;Group  ;
+                Name=Group;
+                GroupType=Repeater }
+
+    { 1170170002;2;Field  ;
+                SourceExpr=C¢digo }
+
+    { 1170170003;2;Field  ;
+                SourceExpr=Descripci¢n }
+
+    { 1170170004;2;Field  ;
+                SourceExpr="Campo calculado" }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+
+OBJECT Page 52151 Tabla horizontal
+{
+  OBJECT-PROPERTIES
+  {
+    Date=08/11/17;
+    Time=12:38:21;
+    Modified=Yes;
+    Version List=MAT;
+  }
+  PROPERTIES
+  {
+    SourceTable=Table52151;
+    PageType=List;
+  }
+  CONTROLS
+  {
+    { 1170170000;0;Container;
+                ContainerType=ContentArea }
+
+    { 1170170001;1;Group  ;
+                Name=Group;
+                GroupType=Repeater }
+
+    { 1170170002;2;Field  ;
+                SourceExpr=C¢digo }
+
+    { 1170170003;2;Field  ;
+                SourceExpr=Descripci¢n }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+
+OBJECT Page 52152 Tabla movimientos
+{
+  OBJECT-PROPERTIES
+  {
+    Date=08/11/17;
+    Time=12:38:54;
+    Modified=Yes;
+    Version List=MAT;
+  }
+  PROPERTIES
+  {
+    SourceTable=Table52152;
+    PageType=List;
+  }
+  CONTROLS
+  {
+    { 1170170000;0;Container;
+                ContainerType=ContentArea }
+
+    { 1170170001;1;Group  ;
+                Name=Group;
+                GroupType=Repeater }
+
+    { 1170170002;2;Field  ;
+                SourceExpr="No. mov." }
+
+    { 1170170003;2;Field  ;
+                SourceExpr="C¢d. tabla vertical" }
+
+    { 1170170004;2;Field  ;
+                SourceExpr="C¢d. tabla horizontal" }
+
+    { 1170170005;2;Field  ;
+                SourceExpr="Fecha registro" }
+
+    { 1170170006;2;Field  ;
+                SourceExpr=Cantidad }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+
+OBJECT Page 52153 Matriz
+{
+  OBJECT-PROPERTIES
+  {
+    Date=13/03/20;
+    Time=10:45:42;
+    Modified=Yes;
+    Version List=MAT;
+  }
+  PROPERTIES
+  {
+    CaptionML=[ENU=Resource Capacity;
+               ESP=Capacidad recurso];
+    SaveValues=Yes;
+    InsertAllowed=No;
+    DeleteAllowed=No;
+    ModifyAllowed=No;
+    LinksAllowed=No;
+    SourceTable=Table52150;
+    DataCaptionExpr='';
+    PageType=ListPlus;
+    OnOpenPage=BEGIN
+                 SetColumns(SetWanted::Initial);
+                 UpdateMatrixSubform;
+                 FindPeriod('');
+               END;
+
+    ActionList=ACTIONS
+    {
+      { 1900000004;0 ;ActionContainer;
+                      ActionContainerType=ActionItems }
+      { 1102601014;1 ;Action    ;
+                      Name=Previous Set;
+                      CaptionML=[ENU=Previous Set;
+                                 ESP=Conjunto anterior];
+                      ToolTipML=[ENU=Go to the previous set of data.;
+                                 ESP=Permite desplazarse al conjunto de datos anterior.];
+                      ApplicationArea=#Jobs;
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      Image=PreviousSet;
+                      PromotedCategory=Process;
+                      OnAction=BEGIN
+                                 SetColumns(SetWanted::Previous);
+                                 UpdateMatrixSubform;
+                               END;
+                                }
+      { 1102601018;1 ;Action    ;
+                      Name=Previous Column;
+                      CaptionML=[ENU=Previous Column;
+                                 ESP=Columna anterior];
+                      ToolTipML=[ENU=Go to the previous column.;
+                                 ESP=Permite desplazarse a la columna anterior.];
+                      ApplicationArea=#Jobs;
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      Image=PreviousRecord;
+                      PromotedCategory=Process;
+                      OnAction=BEGIN
+                                 SetColumns(SetWanted::PreviousColumn);
+                                 UpdateMatrixSubform;
+                               END;
+                                }
+      { 1102601017;1 ;Action    ;
+                      Name=Next Column;
+                      CaptionML=[ENU=Next Column;
+                                 ESP=Columna siguiente];
+                      ToolTipML=[ENU=Go to the next column.;
+                                 ESP=Permite desplazarse a la columna siguiente.];
+                      ApplicationArea=#Jobs;
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      Image=NextRecord;
+                      PromotedCategory=Process;
+                      OnAction=BEGIN
+                                 SetColumns(SetWanted::NextColumn);
+                                 UpdateMatrixSubform;
+                               END;
+                                }
+      { 5       ;1   ;Action    ;
+                      Name=Next Set;
+                      CaptionML=[ENU=Next Set;
+                                 ESP=Conjunto siguiente];
+                      ToolTipML=[ENU=Go to the next set of data.;
+                                 ESP=Permite desplazarse al conjunto de datos siguiente.];
+                      ApplicationArea=#Jobs;
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      Image=NextSet;
+                      PromotedCategory=Process;
+                      OnAction=BEGIN
+                                 SetColumns(SetWanted::Next);
+                                 UpdateMatrixSubform;
+                               END;
+                                }
+      { 1170170003;1 ;Action    ;
+                      CaptionML=[ENU=Previous Period;
+                                 ESP=Periodo anterior];
+                      ToolTipML=[ENU=Show the information based on the previous period. If you set the View by field to Day, the date filter changes to the day before.;
+                                 ESP=Muestra la informaci¢n en funci¢n del per¡odo anterior. Si se establece el campo Ver por en D¡a, el filtro de fecha cambia al d¡a anterior.];
+                      ApplicationArea=#Basic,#Suite;
+                      Promoted=Yes;
+                      Image=PreviousRecord;
+                      PromotedCategory=Process;
+                      OnAction=BEGIN
+                                 FindPeriod('<=');
+                               END;
+                                }
+      { 1170170002;1 ;Action    ;
+                      CaptionML=[ENU=Next Period;
+                                 ESP=Periodo siguiente];
+                      ToolTipML=[ENU=Show the information based on the next period. If you set the View by field to Day, the date filter changes to the day before.;
+                                 ESP=Muestra la informaci¢n en funci¢n del per¡odo siguiente. Si se establece el campo Ver por en D¡a, el filtro de fecha cambia al d¡a anterior.];
+                      ApplicationArea=#Basic,#Suite;
+                      Promoted=Yes;
+                      Image=NextRecord;
+                      PromotedCategory=Process;
+                      OnAction=BEGIN
+                                 FindPeriod('>=');
+                               END;
+                                }
+    }
+  }
+  CONTROLS
+  {
+    { 1900000001;0;Container;
+                ContainerType=ContentArea }
+
+    { 1   ;1   ;Group     ;
+                CaptionML=[ENU=Matrix Options;
+                           ESP=Opciones matriz] }
+
+    { 6   ;2   ;Field     ;
+                CaptionML=[ENU=View by;
+                           ESP=Ver por];
+                ToolTipML=[ENU=Specifies by which period amounts are displayed.;
+                           ESP=Especifica para qu‚ periodos se muestran los importes.];
+                OptionCaptionML=[ENU=Day,Week,Month,Quarter,Year,Accounting Period;
+                                 ESP=D¡a,Semana,Mes,Trimestre,A¤o,Periodo contable];
+                ApplicationArea=#Jobs;
+                SourceExpr=PeriodType;
+                OnValidate=BEGIN
+                             SetColumns(SetWanted::Initial);
+                             UpdateMatrixSubform;
+                             FindPeriod('');
+                           END;
+                            }
+
+    { 9   ;2   ;Field     ;
+                CaptionML=[ENU=View as;
+                           ESP=Ver como];
+                ToolTipML=[ENU=Specifies how amounts are displayed. Net Change: The net change in the balance for the selected period. Balance at Date: The balance as of the last day in the selected period.;
+                           ESP=Especifica c¢mo se muestran los importes. Cambio neto: indica el cambio neto del saldo del periodo seleccionado. Saldo a la fecha: muestra el saldo en el £ltimo d¡a del periodo seleccionado.];
+                OptionCaptionML=[ENU=Net Change,Balance at Date;
+                                 ESP=Saldo periodo,Saldo a la fecha];
+                ApplicationArea=#Jobs;
+                SourceExpr=QtyType;
+                OnValidate=BEGIN
+                             UpdateMatrixSubform;
+                             FindPeriod('');
+                           END;
+                            }
+
+    { 1170170001;2;Field  ;
+                CaptionML=ESP=Filtro fecha;
+                SourceExpr=DateFilter;
+                Editable=false }
+
+    { 1170170000;2;Field  ;
+                CaptionML=ESP=Filtro tabla horizontal;
+                SourceExpr=FiltroTablaHorizontal;
+                TableRelation="Tabla horizontal";
+                OnValidate=BEGIN
+                             SetColumns(SetWanted::Initial);
+                             UpdateMatrixSubform;
+                           END;
+                            }
+
+    { 1102601000;1;Part   ;
+                Name=MatrixForm;
+                ApplicationArea=#Jobs;
+                SubPageLink=Filtro fecha=FIELD(Filtro fecha);
+                PagePartID=Page52154 }
+
+  }
+  CODE
+  {
+    VAR
+      PeriodType@1001 : 'Day,Week,Month,Quarter,Year,Accounting Period';
+      QtyType@1002 : 'Net Change,Balance at Date';
+      ColumnSet@1007 : Text[1024];
+      SetWanted@1005 : 'Initial,Previous,Same,Next,PreviousColumn,NextColumn';
+      PKFirstRecInCurrSet@1006 : Text[100];
+      CurrSetLength@1008 : Integer;
+      MatrixRecord@1170170009 : Record 52151;
+      MatrixRecords@1170170008 : ARRAY [32] OF Record 52151;
+      MatrixRecordRef@1170170007 : RecordRef;
+      MATRIX_CaptionSet@1170170006 : ARRAY [32] OF Text[1024];
+      MATRIX_CaptionRange@1170170005 : Text[100];
+      MATRIX_PKFirstRecInCurrSet@1170170004 : Text[100];
+      MATRIX_CurrSetLength@1170170003 : Integer;
+      MATRIX_SetWanted@1170170002 : 'Initial,Previous,Same,Next';
+      ShowColumnName@1170170000 : Boolean;
+      FiltroTablaHorizontal@1170170001 : Text[50];
+      DateFilter@1170170010 : Text[200];
+
+    PROCEDURE SetColumns@6(SetWanted@1002 : 'Initial,Previous,Same,Next');
+    VAR
+      MatrixMgt@1000 : Codeunit 9200;
+      CaptionFieldNo@1001 : Integer;
+      CurrentMatrixRecordOrdinal@1003 : Integer;
+    BEGIN
+      CLEAR(MATRIX_CaptionSet);
+      CLEAR(MatrixRecords);
+      CurrentMatrixRecordOrdinal := 1;
+      MatrixRecord.SETFILTER(C¢digo,FiltroTablaHorizontal);
+      MatrixRecordRef.GETTABLE(MatrixRecord);
+      MatrixRecordRef.SETTABLE(MatrixRecord);
+
+      IF ShowColumnName THEN
+        CaptionFieldNo := MatrixRecord.FIELDNO(Descripci¢n)
+      ELSE
+        CaptionFieldNo := MatrixRecord.FIELDNO(C¢digo);
+
+      MatrixMgt.GenerateMatrixData(MatrixRecordRef,SetWanted,ARRAYLEN(MatrixRecords),CaptionFieldNo,MATRIX_PKFirstRecInCurrSet,
+        MATRIX_CaptionSet,MATRIX_CaptionRange,MATRIX_CurrSetLength);
+
+      IF MATRIX_CurrSetLength > 0 THEN BEGIN
+        MatrixRecord.SETPOSITION(MATRIX_PKFirstRecInCurrSet);
+        MatrixRecord.FIND;
+        REPEAT
+          MatrixRecords[CurrentMatrixRecordOrdinal].COPY(MatrixRecord);
+          CurrentMatrixRecordOrdinal := CurrentMatrixRecordOrdinal + 1;
+        UNTIL (CurrentMatrixRecordOrdinal > MATRIX_CurrSetLength) OR (MatrixRecord.NEXT <> 1);
+      END;
+    END;
+
+    LOCAL PROCEDURE UpdateMatrixSubform@1102601000();
+    BEGIN
+      CurrPage.MatrixForm.PAGE.Load(QtyType,MATRIX_CaptionSet,MatrixRecords,CurrSetLength);
+      CurrPage.UPDATE(FALSE);
+    END;
+
+    LOCAL PROCEDURE FindPeriod@1170170000(SearchText@1000 : Code[10]);
+    VAR
+      Calendar@1001 : Record 2000000007;
+      AccountingPeriod@1002 : Record 50;
+      PeriodFormMgt@1003 : Codeunit 359;
+    BEGIN
+      IF GETFILTER("Filtro fecha") <> '' THEN BEGIN
+        Calendar.SETFILTER("Period Start",GETFILTER("Filtro fecha"));
+        IF NOT PeriodFormMgt.FindDate('+',Calendar,PeriodType) THEN
+          PeriodFormMgt.FindDate('+',Calendar,PeriodType::Day);
+        Calendar.SETRANGE("Period Start");
+      END;
+      PeriodFormMgt.FindDate(SearchText,Calendar,PeriodType);
+      IF QtyType = QtyType::"Net Change" THEN
+        IF Calendar."Period Start" = Calendar."Period End" THEN
+          SETRANGE("Filtro fecha",Calendar."Period Start")
+        ELSE
+          SETRANGE("Filtro fecha",Calendar."Period Start",Calendar."Period End")
+      ELSE
+        SETRANGE("Filtro fecha",0D,Calendar."Period End");
+      AccountingPeriod.SETCURRENTKEY("New Fiscal Year");
+      AccountingPeriod.SETRANGE("New Fiscal Year",TRUE);
+      IF GETRANGEMIN("Filtro fecha") = 0D THEN
+        AccountingPeriod.SETRANGE("Starting Date",0D,GETRANGEMAX("Filtro fecha"))
+      ELSE BEGIN
+        IF NOT (GETRANGEMIN("Filtro fecha") = NORMALDATE(GETRANGEMIN("Filtro fecha"))) THEN
+          AccountingPeriod.SETRANGE(
+            "Starting Date",
+            GETRANGEMIN("Filtro fecha") + 1,
+            GETRANGEMAX("Filtro fecha"))
+        ELSE
+          AccountingPeriod.SETRANGE(
+            "Starting Date",0D,
+            GETRANGEMIN("Filtro fecha") + 1);
+      END;
+      CurrPage.UPDATE;
+      DateFilter := GETFILTER("Filtro fecha");
+    END;
+
+    BEGIN
+    END.
+  }
+}
+
+OBJECT Page 52154 Matriz subform
+{
+  OBJECT-PROPERTIES
+  {
+    Date=08/11/17;
+    Time=15:35:31;
+    Modified=Yes;
+    Version List=MAT;
+  }
+  PROPERTIES
+  {
+    Editable=Yes;
+    CaptionML=[ENU=Matriz subform;
+               ESP=Matriz subform];
+    LinksAllowed=No;
+    SourceTable=Table52150;
+    PageType=ListPart;
+    OnAfterGetRecord=VAR
+                       MATRIX_CurrentColumnOrdinal@1043 : Integer;
+                     BEGIN
+                       MATRIX_CurrentColumnOrdinal := 0;
+                       IF MatrixRecord.FIND('-') THEN
+                         REPEAT
+                           MATRIX_CurrentColumnOrdinal := MATRIX_CurrentColumnOrdinal + 1;
+                           MATRIX_OnAfterGetRecord(MATRIX_CurrentColumnOrdinal);
+                         UNTIL (MatrixRecord.NEXT(1) = 0) OR (MATRIX_CurrentColumnOrdinal = MATRIX_NoOfMatrixColumns);
+                     END;
+
+  }
+  CONTROLS
+  {
+    { 1900000001;0;Container;
+                ContainerType=ContentArea }
+
+    { 1   ;1   ;Group     ;
+                GroupType=Repeater }
+
+    { 6   ;2   ;Field     ;
+                ToolTipML=[ENU=Specifies a number for the resource.;
+                           ESP=Especifica el n£mero del recurso.];
+                ApplicationArea=#Jobs;
+                SourceExpr=C¢digo }
+
+    { 4   ;2   ;Field     ;
+                ToolTipML=[ENU=Specifies a description of the resource.;
+                           ESP=Especifica una descripci¢n del recurso.];
+                ApplicationArea=#Jobs;
+                SourceExpr=Descripci¢n }
+
+    { 1011;2   ;Field     ;
+                Name=Field1;
+                ApplicationArea=#Jobs;
+                DecimalPlaces=0:5;
+                BlankZero=Yes;
+                SourceExpr=MATRIX_CellData[1];
+                CaptionClass='3,' + MATRIX_ColumnCaption[1];
+                OnValidate=BEGIN
+                             ValidateCantidad(1);
+                           END;
+
+                OnDrillDown=BEGIN
+                              MatrixOnDrillDown(1)
+                            END;
+                             }
+
+    { 1012;2   ;Field     ;
+                Name=Field2;
+                ApplicationArea=#Jobs;
+                DecimalPlaces=0:5;
+                BlankZero=Yes;
+                SourceExpr=MATRIX_CellData[2];
+                CaptionClass='3,' + MATRIX_ColumnCaption[2];
+                OnValidate=BEGIN
+                             ValidateCantidad(2);
+                           END;
+
+                OnDrillDown=BEGIN
+                              MatrixOnDrillDown(2)
+                            END;
+                             }
+
+    { 1013;2   ;Field     ;
+                Name=Field3;
+                ApplicationArea=#Jobs;
+                DecimalPlaces=0:5;
+                BlankZero=Yes;
+                SourceExpr=MATRIX_CellData[3];
+                CaptionClass='3,' + MATRIX_ColumnCaption[3];
+                OnValidate=BEGIN
+                             ValidateCantidad(3);
+                           END;
+
+                OnDrillDown=BEGIN
+                              MatrixOnDrillDown(3)
+                            END;
+                             }
+
+    { 1014;2   ;Field     ;
+                Name=Field4;
+                ApplicationArea=#Jobs;
+                DecimalPlaces=0:5;
+                BlankZero=Yes;
+                SourceExpr=MATRIX_CellData[4];
+                CaptionClass='3,' + MATRIX_ColumnCaption[4];
+                OnValidate=BEGIN
+                             ValidateCantidad(4);
+                           END;
+
+                OnDrillDown=BEGIN
+                              MatrixOnDrillDown(4)
+                            END;
+                             }
+
+    { 1015;2   ;Field     ;
+                Name=Field5;
+                ApplicationArea=#Jobs;
+                DecimalPlaces=0:5;
+                BlankZero=Yes;
+                SourceExpr=MATRIX_CellData[5];
+                CaptionClass='3,' + MATRIX_ColumnCaption[5];
+                OnValidate=BEGIN
+                             ValidateCantidad(5);
+                           END;
+
+                OnDrillDown=BEGIN
+                              MatrixOnDrillDown(5)
+                            END;
+                             }
+
+    { 1016;2   ;Field     ;
+                Name=Field6;
+                ApplicationArea=#Jobs;
+                DecimalPlaces=0:5;
+                BlankZero=Yes;
+                SourceExpr=MATRIX_CellData[6];
+                CaptionClass='3,' + MATRIX_ColumnCaption[6];
+                OnValidate=BEGIN
+                             ValidateCantidad(6);
+                           END;
+
+                OnDrillDown=BEGIN
+                              MatrixOnDrillDown(6)
+                            END;
+                             }
+
+    { 1017;2   ;Field     ;
+                Name=Field7;
+                ApplicationArea=#Jobs;
+                DecimalPlaces=0:5;
+                BlankZero=Yes;
+                SourceExpr=MATRIX_CellData[7];
+                CaptionClass='3,' + MATRIX_ColumnCaption[7];
+                OnValidate=BEGIN
+                             ValidateCantidad(7);
+                           END;
+
+                OnDrillDown=BEGIN
+                              MatrixOnDrillDown(7)
+                            END;
+                             }
+
+    { 1018;2   ;Field     ;
+                Name=Field8;
+                ApplicationArea=#Jobs;
+                DecimalPlaces=0:5;
+                BlankZero=Yes;
+                SourceExpr=MATRIX_CellData[8];
+                CaptionClass='3,' + MATRIX_ColumnCaption[8];
+                OnValidate=BEGIN
+                             ValidateCantidad(8);
+                           END;
+
+                OnDrillDown=BEGIN
+                              MatrixOnDrillDown(8)
+                            END;
+                             }
+
+    { 1019;2   ;Field     ;
+                Name=Field9;
+                ApplicationArea=#Jobs;
+                DecimalPlaces=0:5;
+                BlankZero=Yes;
+                SourceExpr=MATRIX_CellData[9];
+                CaptionClass='3,' + MATRIX_ColumnCaption[9];
+                OnValidate=BEGIN
+                             ValidateCantidad(9);
+                           END;
+
+                OnDrillDown=BEGIN
+                              MatrixOnDrillDown(9)
+                            END;
+                             }
+
+    { 1020;2   ;Field     ;
+                Name=Field10;
+                ApplicationArea=#Jobs;
+                DecimalPlaces=0:5;
+                BlankZero=Yes;
+                SourceExpr=MATRIX_CellData[10];
+                CaptionClass='3,' + MATRIX_ColumnCaption[10];
+                OnValidate=BEGIN
+                             ValidateCantidad(10);
+                           END;
+
+                OnDrillDown=BEGIN
+                              MatrixOnDrillDown(10)
+                            END;
+                             }
+
+    { 1021;2   ;Field     ;
+                Name=Field11;
+                ApplicationArea=#Jobs;
+                DecimalPlaces=0:5;
+                BlankZero=Yes;
+                SourceExpr=MATRIX_CellData[11];
+                CaptionClass='3,' + MATRIX_ColumnCaption[11];
+                OnValidate=BEGIN
+                             ValidateCantidad(11);
+                           END;
+
+                OnDrillDown=BEGIN
+                              MatrixOnDrillDown(11)
+                            END;
+                             }
+
+    { 1022;2   ;Field     ;
+                Name=Field12;
+                ApplicationArea=#Jobs;
+                DecimalPlaces=0:5;
+                BlankZero=Yes;
+                SourceExpr=MATRIX_CellData[12];
+                CaptionClass='3,' + MATRIX_ColumnCaption[12];
+                OnValidate=BEGIN
+                             ValidateCantidad(12);
+                           END;
+
+                OnDrillDown=BEGIN
+                              MatrixOnDrillDown(12)
+                            END;
+                             }
+
+  }
+  CODE
+  {
+    VAR
+      MatrixRecord@1170170000 : Record 52151;
+      MatrixRecords@1000 : ARRAY [32] OF Record 52151;
+      QtyType@1081 : 'Net Change,Balance at Date';
+      MATRIX_NoOfMatrixColumns@1084 : Integer;
+      MATRIX_CellData@1085 : ARRAY [32] OF Decimal;
+      MATRIX_ColumnCaption@1001 : ARRAY [32] OF Text[1024];
+
+    PROCEDURE Load@3(QtyType1@1000 : 'Net Change,Balance at Date';MatrixColumns1@1001 : ARRAY [32] OF Text[1024];VAR MatrixRecords1@1002 : ARRAY [32] OF Record 52151;NoOfMatrixColumns1@1004 : Integer);
+    VAR
+      i@1005 : Integer;
+    BEGIN
+      QtyType := QtyType1;
+      COPYARRAY(MATRIX_ColumnCaption,MatrixColumns1,1);
+      FOR i := 1 TO ARRAYLEN(MatrixRecords) DO
+        MatrixRecords[i].COPY(MatrixRecords1[i]);
+      MATRIX_NoOfMatrixColumns := NoOfMatrixColumns1;
+    END;
+
+    LOCAL PROCEDURE MatrixOnDrillDown@4(ColumnID@1000 : Integer);
+    VAR
+      TablaMovimientos@1001 : Record 52152;
+    BEGIN
+      TablaMovimientos.SETCURRENTKEY("C¢d. tabla vertical","Fecha registro");
+      TablaMovimientos.SETRANGE("C¢d. tabla vertical",C¢digo);
+      TablaMovimientos.SETRANGE("C¢d. tabla horizontal",MatrixRecords[ColumnID].C¢digo);
+      TablaMovimientos.SETFILTER("Fecha registro",GETFILTER("Filtro fecha"));
+      PAGE.RUN(0,TablaMovimientos);
+    END;
+
+    LOCAL PROCEDURE ValidateCantidad@1(MATRIX_ColumnOrdinal@1000 : Integer);
+    BEGIN
+      SETRANGE("Filtro tabla horizontal",MatrixRecords[MATRIX_ColumnOrdinal].C¢digo);
+      CALCFIELDS("Campo calculado");
+      VALIDATE("Campo calculado",MATRIX_CellData[MATRIX_ColumnOrdinal]);
+    END;
+
+    LOCAL PROCEDURE MATRIX_OnAfterGetRecord@1047(ColumnID@1000 : Integer);
+    VAR
+      TablaVertical@1001 : Record 52150;
+    BEGIN
+      TablaVertical.COPY(Rec);
+      TablaVertical.SETRANGE("Filtro tabla horizontal",MatrixRecords[ColumnID].C¢digo);
+      TablaVertical.CALCFIELDS("Campo calculado");
+      MATRIX_CellData[ColumnID] := TablaVertical."Campo calculado";
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

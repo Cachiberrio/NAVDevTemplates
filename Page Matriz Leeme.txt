@@ -1,0 +1,4 @@
+Formulario de matriz basado en las tablas que vienen en los propios objetos.
+Para trabajar con ella podemos hacer 2 cosas:
+• Hacer una renumbering de las tablas por las tablas que se quieren utilizar y luego no importar esas tablas para que no machaquen las que tenemos en nuestra aplicación.
+• Importar el fob, eliminar las tablas y cambiar todas las referencias de las tablas a las tablas que se quieren utilizar.

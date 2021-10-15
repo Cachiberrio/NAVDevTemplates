@@ -1,0 +1,155 @@
+OBJECT Table 52260 Item Management Template
+{
+  OBJECT-PROPERTIES
+  {
+    Date=17/11/20;
+    Time=11:55:18;
+    Modified=Yes;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=[ENU=Item Management Template;
+               ESP=Patr¢n gesti¢n producto];
+  }
+  FIELDS
+  {
+    { 1   ;   ;Item No.            ;Code20        ;TableRelation=Item;
+                                                   OnValidate=BEGIN
+                                                                "Variant Code" := '';
+                                                                IF NOT Item.GET("Item No.") THEN
+                                                                  Item.INIT;
+                                                                Description := Item.Description;
+                                                                "Unit Of Measure" := Item."Base Unit of Measure";
+                                                                "Qty. per Unit of Measure" := 1;
+                                                                VALIDATE(Quantity,0);
+                                                              END;
+
+                                                   CaptionML=[ENU=Item No.;
+                                                              ESP=No. producto] }
+    { 2   ;   ;Variant Code        ;Code10        ;TableRelation="Item Variant".Code WHERE (Item No.=FIELD(Item No.));
+                                                   OnValidate=VAR
+                                                                VarianteProd@1170170000 : Record 5401;
+                                                              BEGIN
+                                                                IF "Variant Code" = '' THEN
+                                                                  EXIT;
+                                                                ItemVariant.GET("Item No.","Variant Code");
+                                                                Description := ItemVariant.Description;
+                                                              END;
+
+                                                   CaptionML=[ENU=Variant Code;
+                                                              ESP=C¢d. variante] }
+    { 3   ;   ;Quantity            ;Decimal       ;OnValidate=BEGIN
+                                                                TESTFIELD("Qty. per Unit of Measure");
+                                                                "Quantity (Base)" := ROUND(Quantity * "Qty. per Unit of Measure",0.000001);
+                                                              END;
+
+                                                   CaptionML=[ENU=Quantity;
+                                                              ESP=Cantidad];
+                                                   DecimalPlaces=0:5;
+                                                   MinValue=0 }
+    { 4   ;   ;Unit Of Measure     ;Code10        ;TableRelation="Item Unit of Measure".Code WHERE (Item No.=FIELD(Item No.));
+                                                   OnValidate=VAR
+                                                                Resource@1000 : Record 156;
+                                                              BEGIN
+                                                                TESTFIELD("Item No.");
+                                                                Item.GET("Item No.");
+                                                                "Qty. per Unit of Measure" :=
+                                                                  UOMMgt.GetQtyPerUnitOfMeasure(Item,"Unit Of Measure");
+                                                                IF CurrFieldNo = FIELDNO("Unit Of Measure") THEN
+                                                                  VALIDATE(Quantity);
+                                                              END;
+
+                                                   CaptionML=[ENU=Unit Of Measure;
+                                                              ESP=C¢d. unidad medida] }
+    { 5   ;   ;Qty. per Unit of Measure;Decimal   ;InitValue=1;
+                                                   CaptionML=[ENU=Qty. per Unit of Measure;
+                                                              ESP=Cdad. por unidad medida];
+                                                   DecimalPlaces=0:5;
+                                                   Editable=No }
+    { 6   ;   ;Quantity (Base)     ;Decimal       ;OnValidate=BEGIN
+                                                                TESTFIELD("Qty. per Unit of Measure",1);
+                                                                VALIDATE(Quantity,"Quantity (Base)");
+                                                              END;
+
+                                                   CaptionML=[ENU=Quantity (Base);
+                                                              ESP=Cantidad (base)];
+                                                   DecimalPlaces=0:5;
+                                                   Editable=No }
+    { 7   ;   ;Description         ;Text50        ;CaptionML=[ENU=Description;
+                                                              ESP=Descripci¢n] }
+  }
+  KEYS
+  {
+    {    ;Item No.                                ;Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+    VAR
+      Item@1170170000 : Record 27;
+      ItemVariant@1170170001 : Record 5401;
+      UOMMgt@1170170002 : Codeunit 5402;
+
+    BEGIN
+    END.
+  }
+}
+
+OBJECT Page 52260 Item Management Template
+{
+  OBJECT-PROPERTIES
+  {
+    Date=17/11/20;
+    Time=11:55:42;
+    Modified=Yes;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=[ENU=Item Management Template;
+               ESP=Patr¢n gesti¢n producto];
+    SourceTable=Table52260;
+    PageType=List;
+  }
+  CONTROLS
+  {
+    { 1170170000;0;Container;
+                ContainerType=ContentArea }
+
+    { 1170170001;1;Group  ;
+                Name=Group;
+                GroupType=Repeater }
+
+    { 1170170002;2;Field  ;
+                SourceExpr="Item No." }
+
+    { 1170170003;2;Field  ;
+                SourceExpr="Variant Code" }
+
+    { 1170170004;2;Field  ;
+                SourceExpr=Quantity }
+
+    { 1170170005;2;Field  ;
+                SourceExpr="Unit Of Measure" }
+
+    { 1170170006;2;Field  ;
+                SourceExpr="Qty. per Unit of Measure" }
+
+    { 1170170007;2;Field  ;
+                SourceExpr="Quantity (Base)" }
+
+    { 1170170008;2;Field  ;
+                SourceExpr=Description }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

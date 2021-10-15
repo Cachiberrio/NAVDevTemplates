@@ -1,0 +1,29 @@
+DIAES14.00 Cadenas a sustituir
+=================================
+<JournalName>
+<NombreDiario>
+<nombrediario>
+<NOMBREDIARIO>
+<JOURNALNAME>
+<JournalDescription>
+<DescripcionDiario>
+JournalName
+
+Sustitución de caracteres extraños
+======================================
+"á"= " "
+"é" = "‚"
+"í" = "¡"
+"ó" = "¢"
+'ú" = "£"
+
+µÖàé
+
+"Á" = "µ"
+"É" = ""
+"Í" = "Ö"
+"Ó" = "à"
+"Ú" = "é"
+
+"ñ" = "¤"
+"Ñ" = "¥"

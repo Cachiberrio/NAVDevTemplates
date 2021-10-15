@@ -1,0 +1,76 @@
+OBJECT Table 57000 <Funcionality> Setup
+{
+  OBJECT-PROPERTIES
+  {
+    Date=07/01/20;
+    Time=10:55:46;
+    Modified=Yes;
+    Version List=CNF;
+  }
+  PROPERTIES
+  {
+    CaptionML=[ENU=<Funcionality> Setup;
+               ESP=Conf. <funcionalidad>];
+  }
+  FIELDS
+  {
+    { 1   ;   ;Primary Key         ;Integer       ;CaptionML=[ENU=Primary Key;
+                                                              ESP=Clave primaria] }
+  }
+  KEYS
+  {
+    {    ;Primary Key                             ;Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+
+OBJECT Page 57000 <Funcionality> Setup
+{
+  OBJECT-PROPERTIES
+  {
+    Date=15/10/21;
+    Time=[ 9:41:55];
+    Modified=Yes;
+    Version List=CNF;
+  }
+  PROPERTIES
+  {
+    CaptionML=[ENU=<Funcionality> Setup;
+               ESP=Conf. <funcionalidad>];
+    SourceTable=Table57000;
+    PageType=Card;
+    OnOpenPage=BEGIN
+                 RESET;
+                 IF NOT GET THEN BEGIN
+                   INIT;
+                   INSERT;
+                 END;
+               END;
+
+  }
+  CONTROLS
+  {
+    { 1170170000;0;Container;
+                ContainerType=ContentArea }
+
+    { 1170170001;1;Group  ;
+                Name=General;
+                GroupType=Group }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

@@ -51,7 +51,7 @@ OBJECT Table 52100 <TableName>
                                                                                                        <TableName> No.=FIELD(No.)));
                                                    CaptionML=[ENU=Comment;
                                                               ESP=Comment] }
-    { 8   ;   ;No. series          ;Code10        ;TableRelation="No. Series";
+    { 8   ;   ;No. series          ;Code20        ;TableRelation="No. Series";
                                                    CaptionML=[ENU=No. series;
                                                               ESP=No. serie] }
   }

@@ -95,7 +95,7 @@ OBJECT Table 91850 <IntegrTable>
     { 14  ;   ;Date Filter         ;Date          ;FieldClass=FlowFilter;
                                                    CaptionML=[ENU=Date Filter;
                                                               ESP=Filtro Fecha] }
-    { 15  ;   ;No. series          ;Code10        ;TableRelation="No. Series";
+    { 15  ;   ;No. series          ;Code20        ;TableRelation="No. Series";
                                                    CaptionML=[ENU=No. series;
                                                               ESP=No. serie];
                                                    Editable=No }
