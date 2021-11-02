@@ -104,7 +104,7 @@ OBJECT Table 52101 <TableName> Setup
   {
     { 1   ;   ;Primary Key         ;Code10        ;CaptionML=[ENU=Primary Key;
                                                               ESP=Clave primaria] }
-    { 2   ;   ;<TableName> No. Series;Code10      ;TableRelation="No. Series";
+    { 2   ;   ;<TableName> No. Series;Code20      ;TableRelation="No. Series";
                                                    CaptionML=[ENU=<TableName> No. Series;
                                                               ESP=No. serie <NombreTabla>] }
   }

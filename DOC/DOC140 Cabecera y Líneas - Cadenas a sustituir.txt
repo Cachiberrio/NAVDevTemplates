@@ -23,3 +23,6 @@ Sustitución de caracteres extraños
 
 "ñ" = "¤"
 "Ñ" = "¥"
+
+Â¢ = ¢
+Â¡ = ¡

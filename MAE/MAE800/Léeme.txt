@@ -1,0 +1,20 @@
+==============================================================
+= MAE Tabla maestra con serie de numeración + Comentarios    =
+==============================================================
+Objetos que se pueden emplear para la creación de una tabla maestra con serie de numeración y tabla de comentarios asociada
+
+IMPORTANTE : Se debe utilizar la Renumbering Tool para evitar pérdida de otro tipo de objetos
+
+Sustituciones en el fichero de texto renumerado
+==============================================================
+En el caso de que se quiera hacer que antes de importar se cambien los Documento al nombre del documento que estemos creando, 
+debemos hacer las siguientes sustituciones en el fichero de texto una vez renumerado.
+Importante: Respétese el orden de sustitución y la coincidencia de mayúsculas y minúsculas.
+
+<Maestro>
+ConfMaestro
+<maestros>
+<maestro>
+<Master>
+<Masters>
+

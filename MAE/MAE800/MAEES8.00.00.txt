@@ -1,0 +1,394 @@
+OBJECT Table 52100 <Maestro>
+{
+  OBJECT-PROPERTIES
+  {
+    Date=19/02/15;
+    Time=13:12:12;
+    Modified=Yes;
+    Version List=MAEES8.00.00;
+  }
+  PROPERTIES
+  {
+    OnInsert=BEGIN
+               ConfMaestro.GET;
+               IF "N§" = '' THEN BEGIN
+                 ConfMaestro.TESTFIELD("No. serie <maestros>");
+                 NoSeriesMgt.InitSeries(ConfMaestro."No. serie <maestros>",xRec."N§ serie",Fecha,"N§","N§ serie");
+                 Fecha := TODAY;
+               END;
+               "Creado por Id. usuario" := USERID;
+             END;
+
+    OnDelete=VAR
+               LinComentario@1170170000 : Record 52102;
+             BEGIN
+               LinComentario.RESET;
+               LinComentario.SETRANGE("Nombre tabla",LinComentario."Nombre tabla"::"<Maestro>");
+               LinComentario.SETRANGE("N§ <maestro>","N§");
+               LinComentario.DELETEALL(FALSE);
+             END;
+
+    CaptionML=[ENU=<Master> Header;
+               ESP=<Maestro>];
+    LookupPageID=Page52101;
+    DrillDownPageID=Page52101;
+  }
+  FIELDS
+  {
+    { 1   ;   ;N§                  ;Code20        ;CaptionML=[ENU=No.;
+                                                              ESP=N§] }
+    { 2   ;   ;Nombre              ;Text50        ;CaptionML=[ENU=Description;
+                                                              ESP=Descripci¢n] }
+    { 4   ;   ;Creado por Id. usuario;Code20      ;TableRelation=User;
+                                                   ValidateTableRelation=No;
+                                                   TestTableRelation=No;
+                                                   CaptionML=[ENU=Created By User Id.;
+                                                              ESP=Creado por Id. usuario] }
+    { 6   ;   ;Fecha               ;Date          ;CaptionML=[ENU=Date;
+                                                              ESP=Fecha] }
+    { 7   ;   ;Comentario          ;Boolean       ;FieldClass=FlowField;
+                                                   CalcFormula=Exist("L¡n. comentario <maestro>" WHERE (Nombre tabla=CONST(<Maestro>),
+                                                                                                        N§ <maestro>=FIELD(N§)));
+                                                   CaptionML=ESP=Comment }
+    { 8   ;   ;N§ serie            ;Code10        ;TableRelation="No. Series";
+                                                   CaptionML=ESP=N§ serie }
+  }
+  KEYS
+  {
+    {    ;N§                                      ;Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+    { 1   ;DropDown            ;N§,Nombre                                }
+  }
+  CODE
+  {
+    VAR
+      ConfMaestro@1170170000 : Record 52101;
+      NoSeriesMgt@1170170001 : Codeunit 396;
+
+    PROCEDURE AssistEdit@2(AntParte@1000 : Record 52100) : Boolean;
+    BEGIN
+      ConfMaestro.GET;
+      ConfMaestro.TESTFIELD("No. serie <maestros>");
+      IF NoSeriesMgt.SelectSeries(ConfMaestro."No. serie <maestros>",AntParte."N§ serie","N§ serie") THEN BEGIN
+        ConfMaestro.GET;
+        ConfMaestro.TESTFIELD("No. serie <maestros>");
+        NoSeriesMgt.SetSeries("N§");
+        EXIT(TRUE);
+      END;
+    END;
+
+    BEGIN
+    END.
+  }
+}
+
+OBJECT Table 52101 Configuraci¢n <maestro>
+{
+  OBJECT-PROPERTIES
+  {
+    Date=19/02/15;
+    Time=12:58:26;
+    Modified=Yes;
+    Version List=MAEES8.00.00;
+  }
+  PROPERTIES
+  {
+    CaptionML=[ENU=<Master> Setup;
+               ESP=Configuraci¢n <maestro>];
+  }
+  FIELDS
+  {
+    { 1   ;   ;Clave primaria      ;Code10        ;CaptionML=[ENU=Primary Key;
+                                                              ESP=Clave primaria] }
+    { 2   ;   ;No. serie <maestros>;Code10        ;TableRelation="No. Series";
+                                                   CaptionML=[ENU=<Master> No. Series;
+                                                              ESP=No. serie <maestros>] }
+  }
+  KEYS
+  {
+    {    ;Clave primaria                          ;Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+
+OBJECT Table 52102 L¡n. comentario <maestro>
+{
+  OBJECT-PROPERTIES
+  {
+    Date=19/02/15;
+    Time=13:02:08;
+    Modified=Yes;
+    Version List=MAEES8.00.00;
+  }
+  PROPERTIES
+  {
+    CaptionML=[ENU=<Master> Comment Line;
+               ESP=L¡n. comentario <maestro>];
+  }
+  FIELDS
+  {
+    { 1   ;   ;Nombre tabla        ;Option        ;CaptionML=[ENU=Table Name;
+                                                              ESP=Nombre tabla];
+                                                   OptionCaptionML=[ENU=<Master>;
+                                                                    ESP=<Maestro>];
+                                                   OptionString=<Maestro> }
+    { 2   ;   ;N§ <maestro>        ;Code10        ;CaptionML=[ENU=No.;
+                                                              ESP=N§] }
+    { 4   ;   ;C¢digo              ;Code10        ;CaptionML=[ENU=Code;
+                                                              ESP=C¢digo] }
+    { 5   ;   ;N§ l¡nea            ;Integer       ;CaptionML=[ENU=Line No.;
+                                                              ESP=N§ l¡nea] }
+    { 6   ;   ;Fecha               ;Date          ;CaptionML=[ENU=Date;
+                                                              ESP=Fecha] }
+    { 7   ;   ;Comentario          ;Text80        ;CaptionML=[ENU=Comment;
+                                                              ESP=Comentario] }
+  }
+  KEYS
+  {
+    {    ;Nombre tabla,N§ <maestro>,C¢digo,N§ l¡nea;
+                                                   Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    PROCEDURE ConfNuevaLinea@1();
+    VAR
+      LinComentario@1000 : Record 52102;
+    BEGIN
+      LinComentario.SETRANGE("Nombre tabla","Nombre tabla");
+      LinComentario.SETRANGE("N§ <maestro>","N§ <maestro>");
+      LinComentario.SETRANGE(Fecha,WORKDATE);
+      IF NOT LinComentario.FINDFIRST THEN
+        Fecha := WORKDATE;
+    END;
+
+    BEGIN
+    END.
+  }
+}
+
+OBJECT Page 52100 Ficha <Maestro>
+{
+  OBJECT-PROPERTIES
+  {
+    Date=19/02/15;
+    Time=12:57:59;
+    Modified=Yes;
+    Version List=MAEES8.00.00;
+  }
+  PROPERTIES
+  {
+    CaptionML=[ENU=<Master> Card;
+               ESP=Ficha <Maestro>];
+    SourceTable=Table52100;
+    PageType=Document;
+    ActionList=ACTIONS
+    {
+      { 1170170006;  ;ActionContainer;
+                      ActionContainerType=RelatedInformation }
+      { 1170170008;1 ;Action    ;
+                      CaptionML=[ENU=Comments;
+                                 ESP=Comentarios];
+                      RunObject=Page 52103;
+                      RunPageLink=Nombre tabla=CONST(<Maestro>),
+                                  N§ <maestro>=FIELD(N§);
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      Image=ViewComments;
+                      PromotedCategory=Process }
+    }
+  }
+  CONTROLS
+  {
+    { 1170170000;0;Container;
+                ContainerType=ContentArea }
+
+    { 1170170001;1;Group  ;
+                Name=General;
+                GroupType=Group }
+
+    { 1170170002;2;Field  ;
+                SourceExpr="N§";
+                OnAssistEdit=BEGIN
+                               AssistEdit(Rec);
+                             END;
+                              }
+
+    { 1170170003;2;Field  ;
+                SourceExpr=Nombre }
+
+    { 1170170004;2;Field  ;
+                SourceExpr="Creado por Id. usuario" }
+
+    { 1170170005;2;Field  ;
+                SourceExpr=Fecha }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+
+OBJECT Page 52101 Lista <maestros>
+{
+  OBJECT-PROPERTIES
+  {
+    Date=19/02/15;
+    Time=13:00:10;
+    Modified=Yes;
+    Version List=MAEES8.00.00;
+  }
+  PROPERTIES
+  {
+    Editable=No;
+    CaptionML=[ENU=<Master> List;
+               ESP=Lista <maestros>];
+    SourceTable=Table52100;
+    PageType=List;
+    CardPageID=Ficha <Maestro>;
+    ActionList=ACTIONS
+    {
+      { 1170170007;  ;ActionContainer;
+                      ActionContainerType=RelatedInformation }
+      { 1170170006;1 ;Action    ;
+                      CaptionML=[ENU=Comments;
+                                 ESP=Comentarios];
+                      RunObject=Page 52103;
+                      RunPageLink=Nombre tabla=CONST(<Maestro>),
+                                  N§ <maestro>=FIELD(N§);
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      Image=ViewComments;
+                      PromotedCategory=Process }
+    }
+  }
+  CONTROLS
+  {
+    { 1170170000;0;Container;
+                ContainerType=ContentArea }
+
+    { 1170170001;1;Group  ;
+                Name=Group;
+                GroupType=Repeater }
+
+    { 1170170002;2;Field  ;
+                SourceExpr="N§" }
+
+    { 1170170003;2;Field  ;
+                SourceExpr=Nombre }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+
+OBJECT Page 52102 Configuraci¢n <maestros>
+{
+  OBJECT-PROPERTIES
+  {
+    Date=19/02/15;
+    Time=12:30:37;
+    Modified=Yes;
+    Version List=MAEES8.00.00;
+  }
+  PROPERTIES
+  {
+    CaptionML=[ENU=<Masters> Sertup;
+               ESP=Configuraci¢n <maestros>];
+    SourceTable=Table52101;
+    PageType=Card;
+  }
+  CONTROLS
+  {
+    { 1170170000;0;Container;
+                ContainerType=ContentArea }
+
+    { 1170170001;1;Group  ;
+                Name=General;
+                GroupType=Group }
+
+    { 1170170002;2;Field  ;
+                SourceExpr="No. serie <maestros>" }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+
+OBJECT Page 52103 Hoja comentarios <maestro>
+{
+  OBJECT-PROPERTIES
+  {
+    Date=19/02/15;
+    Time=13:00:32;
+    Modified=Yes;
+    Version List=MAEES8.00.00;
+  }
+  PROPERTIES
+  {
+    CaptionML=[ENU=<Master> Comment Sheet;
+               ESP=Hoja comentarios <maestro>];
+    MultipleNewLines=Yes;
+    LinksAllowed=No;
+    SourceTable=Table52102;
+    DelayedInsert=Yes;
+    DataCaptionFields=Nombre tabla,N§ <maestro>;
+    PageType=List;
+    AutoSplitKey=Yes;
+    OnNewRecord=BEGIN
+                  ConfNuevaLinea;
+                END;
+
+  }
+  CONTROLS
+  {
+    { 1170170000;0;Container;
+                ContainerType=ContentArea }
+
+    { 1170170001;1;Group  ;
+                Name=Group;
+                GroupType=Repeater }
+
+    { 1170170002;2;Field  ;
+                SourceExpr=C¢digo;
+                Visible=FALSE }
+
+    { 1170170003;2;Field  ;
+                SourceExpr=Fecha }
+
+    { 1170170004;2;Field  ;
+                SourceExpr=Comentario }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

@@ -1,0 +1,780 @@
+OBJECT Codeunit 91550 Test Template Codeunit
+{
+  OBJECT-PROPERTIES
+  {
+    Date=02/11/21;
+    Time=13:46:05;
+    Modified=Yes;
+    Version List=TTC;
+  }
+  PROPERTIES
+  {
+    Subtype=Test;
+    OnRun=BEGIN
+          END;
+
+  }
+  CODE
+  {
+    VAR
+      LibraryRandom@1170170001 : Codeunit 130440;
+      LibraryUtility@1170170002 : Codeunit 131000;
+      LibraryInventory@1170170004 : Codeunit 132201;
+      LibraryWarehouse@1170170003 : Codeunit 132204;
+      LibraryPurchase@1170170005 : Codeunit 130512;
+      LibrarySales@1170170006 : Codeunit 130509;
+      LibraryAssembly@1170170007 : Codeunit 132207;
+      LibraryManufacturing@1170170008 : Codeunit 132202;
+      LibraryPatterns@1170170009 : Codeunit 132212;
+      LibraryItemTracking@1170170000 : Codeunit 130502;
+
+    [Test]
+    PROCEDURE PostPositiveAdjustment@1170170003();
+    VAR
+      ItemJournalLine@1170170000 : Record 83;
+      Item@1170170003 : Record 27;
+      Qty@1170170005 : Decimal;
+      Location@1170170008 : Record 14;
+      ItemTracking@1170170001 : Boolean;
+      SerialNo@1170170002 : Code[20];
+      LotNo@1170170004 : Code[20];
+    BEGIN
+      // Given
+      Qty := LibraryRandom.RandDec(10000,2);
+      ItemTracking := FALSE;
+      CreateItemAndLocation(Item,Location,ItemTracking);
+
+      // When
+      CreateAndPostItemJournalLine(ItemJournalLine,Item."No.",Location.Code,Qty,ItemJournalLine."Entry Type"::"Positive Adjmt.",ItemTracking,SerialNo,LotNo);
+
+      // Then
+      TestItemLedgerEntry(Item."No.",Location.Code);
+    END;
+
+    [Test]
+    PROCEDURE PostNegativeAdjustment@1170170022();
+    VAR
+      ItemJournalLine@1170170000 : Record 83;
+      Item@1170170003 : Record 27;
+      Qty@1170170005 : Decimal;
+      Location@1170170008 : Record 14;
+      ItemTracking@1170170001 : Boolean;
+      SerialNo@1170170004 : Code[20];
+      LotNo@1170170002 : Code[20];
+    BEGIN
+      // Given
+      Qty := LibraryRandom.RandDec(10000,2);
+      ItemTracking := FALSE;
+      CreateItemAndLocation(Item,Location,ItemTracking);
+
+      // When
+      CreateAndPostItemJournalLine(ItemJournalLine,Item."No.",Location.Code,Qty,ItemJournalLine."Entry Type"::"Negative Adjmt.",ItemTracking,SerialNo,LotNo);
+
+      // Then
+      TestItemLedgerEntry(Item."No.",Location.Code);
+    END;
+
+    [Test]
+    PROCEDURE PostPurchase@1170170026();
+    VAR
+      Item@1170170003 : Record 27;
+      Qty@1170170005 : Decimal;
+      Location@1170170008 : Record 14;
+      PurchaseHeader@1170170000 : Record 38;
+      ItemJournalLine@1170170001 : Record 83;
+      ItemTracking@1170170002 : Boolean;
+    BEGIN
+      // Given
+      Qty := LibraryRandom.RandDec(10000,2);
+      ItemTracking := FALSE;
+      CreateItemAndLocation(Item,Location,ItemTracking);
+
+      // When
+      CreateAndPostPurchaseHeader(PurchaseHeader,Item."No.",Location.Code,Qty,ItemTracking);
+
+      // Then
+      TestItemLedgerEntry(Item."No.",Location.Code);
+    END;
+
+    [Test]
+    PROCEDURE PostSale@1170170007();
+    VAR
+      Item@1170170003 : Record 27;
+      Qty@1170170002 : Decimal;
+      Location@1170170001 : Record 14;
+      SalesHeader@1170170000 : Record 36;
+      ItemJournalLine@1170170004 : Record 83;
+      ItemTracking@1170170005 : Boolean;
+    BEGIN
+      // Given
+      Qty := LibraryRandom.RandDec(10000,2);
+      ItemTracking := FALSE;
+      CreateItemAndLocation(Item,Location,ItemTracking);
+
+      // When
+      CreateAndPostSalesHeader(SalesHeader,Item."No.",Location.Code,Qty,ItemTracking);
+
+      // Then
+      TestItemLedgerEntry(Item."No.",Location.Code);
+    END;
+
+    [Test]
+    PROCEDURE ShipTransfer@1170170008();
+    VAR
+      Item@1170170002 : Record 27;
+      Qty@1170170001 : Decimal;
+      FromLocation@1170170000 : Record 14;
+      ToLocation@1170170004 : Record 14;
+      TransferHeader@1170170003 : Record 5740;
+      ItemJournalLine@1170170005 : Record 83;
+      ItemTracking@1170170006 : Boolean;
+    BEGIN
+      // Given
+      Qty := LibraryRandom.RandDec(10000,2);
+      ItemTracking := FALSE;
+      CreateItemAndLocation(Item,FromLocation,ItemTracking);
+
+      // When
+      CreateAndPostTransferOrder(TransferHeader,Item."No.",FromLocation.Code,ToLocation.Code,Qty,TRUE,FALSE,ItemTracking);
+
+      // Then
+      TestItemLedgerEntry(Item."No.",FromLocation.Code);
+    END;
+
+    [Test]
+    PROCEDURE ReceiveTransfer@1170170005();
+    VAR
+      Item@1170170002 : Record 27;
+      Qty@1170170001 : Decimal;
+      FromLocation@1170170000 : Record 14;
+      ToLocation@1170170004 : Record 14;
+      TransferHeader@1170170003 : Record 5740;
+      ItemJournalLine@1170170005 : Record 83;
+      ItemTracking@1170170006 : Boolean;
+    BEGIN
+      // Given
+      Qty := LibraryRandom.RandDec(10000,2);
+      ItemTracking := FALSE;
+      CreateItemAndLocation(Item,FromLocation,ItemTracking);
+
+      // When
+      CreateAndPostTransferOrder(TransferHeader,Item."No.",FromLocation.Code,ToLocation.Code,Qty,TRUE,TRUE,ItemTracking);
+
+      // Then
+      TestItemLedgerEntry(Item."No.",FromLocation.Code);
+      TestItemLedgerEntry(Item."No.",ToLocation.Code);
+    END;
+
+    [Test]
+    [HandlerFunctions(MessageHandler)]
+    PROCEDURE PostAssemblyOrder@1170170006();
+    VAR
+      AssemblyHeader@1170170000 : Record 900;
+      Item@1170170003 : Record 27;
+      Qty@1170170005 : Decimal;
+      Location@1170170008 : Record 14;
+      ItemTracking@1170170001 : Boolean;
+      SerialNo@1170170002 : Code[20];
+      LotNo@1170170004 : Code[20];
+    BEGIN
+      // Given
+      Qty := LibraryRandom.RandDec(10000,2);
+      ItemTracking := FALSE;
+      CreateItemAndLocation(Item,Location,ItemTracking);
+      ConvertIntoAssemblyItem(Item,Location.Code);
+      PurchaseBOMComponents(Item."No.",Location.Code,Qty,ItemTracking,SerialNo,LotNo);
+
+      // When
+      CreateAndPostAssemblyHeader(AssemblyHeader,Item."No.",Location.Code,Qty,ItemTracking,SerialNo,LotNo);
+
+      // Then
+      TestItemLedgerEntry(Item."No.",Location.Code);
+    END;
+
+    [Test]
+    PROCEDURE PostProductionOrderOutput@1170170015();
+    VAR
+      ProductionOrder@1170170000 : Record 5405;
+      ItemJournalLine@1170170002 : Record 83;
+      Item@1170170003 : Record 27;
+      CompItem@1170170001 : Record 27;
+      Qty@1170170005 : Decimal;
+      Location@1170170008 : Record 14;
+      ItemTracking@1170170004 : Boolean;
+      SerialNo@1170170007 : Code[20];
+      LotNo@1170170006 : Code[20];
+    BEGIN
+      // Given
+      Qty := LibraryRandom.RandDec(10000,2);
+      ItemTracking := FALSE;
+      CreateItemAndLocation(Item,Location,ItemTracking);
+      ConvertIntoProductionItem(Item,CompItem,Location.Code);
+      CreateAndPostItemJournalLine(ItemJournalLine,CompItem."No.",Location.Code,Qty * 10,ItemJournalLine."Entry Type"::"Positive Adjmt.",ItemTracking,SerialNo,LotNo);
+
+      // When
+      CreateAndPostProductionOrder(ProductionOrder,Item."No.",Location.Code,Qty,ItemTracking,SerialNo,LotNo);
+
+      // Then
+      TestItemLedgerEntry(Item."No.",Location.Code);
+    END;
+
+    [Test]
+    PROCEDURE PostProductionOrderConsumption@1170170010();
+    VAR
+      ProductionOrder@1170170000 : Record 5405;
+      ItemJournalLine@1170170002 : Record 83;
+      Item@1170170003 : Record 27;
+      CompItem@1170170001 : Record 27;
+      Qty@1170170005 : Decimal;
+      Location@1170170008 : Record 14;
+      ItemTracking@1170170004 : Boolean;
+      SerialNo@1170170007 : Code[20];
+      LotNo@1170170006 : Code[20];
+    BEGIN
+      // Given
+      Qty := LibraryRandom.RandDec(10000,2);
+      ItemTracking := FALSE;
+      CreateItemAndLocation(Item,Location,ItemTracking);
+      ConvertIntoProductionItem(Item,CompItem,Location.Code);
+      CompItem.VALIDATE("Tariff No.",Item."Tariff No.");
+      CompItem.VALIDATE("Gross Weight",LibraryUtility.GenerateRandomFraction * 1000);
+      CompItem.VALIDATE("Net Weight",Item."Gross Weight" - 1);
+      CompItem.VALIDATE("Unit Volume",LibraryUtility.GenerateRandomFraction * 100);
+      CompItem.MODIFY;
+      CreateAndPostItemJournalLine(ItemJournalLine,CompItem."No.",Location.Code,Qty * 10,ItemJournalLine."Entry Type"::"Positive Adjmt.",ItemTracking,SerialNo,LotNo);
+
+      // When
+      CreateAndPostProductionOrder(ProductionOrder,Item."No.",Location.Code,Qty,ItemTracking,SerialNo,LotNo);
+      PostProdOrderConsumption(ProductionOrder,CompItem,Location.Code,Qty,ItemTracking,SerialNo,LotNo);
+
+      // Then
+      TestItemLedgerEntry(CompItem."No.",Location.Code);
+    END;
+
+    [Test]
+    PROCEDURE LotItemTrackingPostPositiveAdjustment@1170170038();
+    VAR
+      ItemJournalLine@1170170000 : Record 83;
+      Item@1170170003 : Record 27;
+      Qty@1170170005 : Decimal;
+      Location@1170170008 : Record 14;
+      ItemTracking@1170170001 : Boolean;
+      SerialNo@1170170002 : Code[20];
+      LotNo@1170170004 : Code[20];
+    BEGIN
+      // Given
+      Qty := LibraryRandom.RandDec(10000,2);
+      ItemTracking := TRUE;
+      CreateItemAndLocation(Item,Location,ItemTracking);
+
+      // When
+      CreateAndPostItemJournalLine(ItemJournalLine,Item."No.",Location.Code,Qty,ItemJournalLine."Entry Type"::"Positive Adjmt.",ItemTracking,SerialNo,LotNo);
+
+      // Then
+      TestItemLedgerEntry(Item."No.",Location.Code);
+    END;
+
+    [Test]
+    PROCEDURE LotItemTrackingPostNegativeAdjustment@1170170037();
+    VAR
+      ItemJournalLine@1170170000 : Record 83;
+      Item@1170170003 : Record 27;
+      Qty@1170170005 : Decimal;
+      Location@1170170008 : Record 14;
+      ItemTracking@1170170001 : Boolean;
+      SerialNo@1170170004 : Code[20];
+      LotNo@1170170002 : Code[20];
+    BEGIN
+      // Given
+      Qty := LibraryRandom.RandDec(10000,2);
+      ItemTracking := TRUE;
+      CreateItemAndLocation(Item,Location,ItemTracking);
+
+      // When
+      CreateAndPostItemJournalLine(ItemJournalLine,Item."No.",Location.Code,Qty,ItemJournalLine."Entry Type"::"Negative Adjmt.",ItemTracking,SerialNo,LotNo);
+
+      // Then
+      TestItemLedgerEntry(Item."No.",Location.Code);
+    END;
+
+    [Test]
+    PROCEDURE LotItemTrackingPostPurchase@1170170036();
+    VAR
+      Item@1170170003 : Record 27;
+      Qty@1170170005 : Decimal;
+      Location@1170170008 : Record 14;
+      PurchaseHeader@1170170000 : Record 38;
+      ItemJournalLine@1170170001 : Record 83;
+      ItemTracking@1170170002 : Boolean;
+    BEGIN
+      // Given
+      Qty := LibraryRandom.RandDec(10000,2);
+      ItemTracking := TRUE;
+      CreateItemAndLocation(Item,Location,ItemTracking);
+
+      // When
+      CreateAndPostPurchaseHeader(PurchaseHeader,Item."No.",Location.Code,Qty,ItemTracking);
+
+      // Then
+      TestItemLedgerEntry(Item."No.",Location.Code);
+    END;
+
+    [Test]
+    PROCEDURE LotItemTrackingPostSale@1170170034();
+    VAR
+      Item@1170170003 : Record 27;
+      Qty@1170170002 : Decimal;
+      Location@1170170001 : Record 14;
+      SalesHeader@1170170000 : Record 36;
+      ItemJournalLine@1170170004 : Record 83;
+      ItemTracking@1170170005 : Boolean;
+    BEGIN
+      // Given
+      Qty := LibraryRandom.RandDec(10000,2);
+      ItemTracking := TRUE;
+      CreateItemAndLocation(Item,Location,ItemTracking);
+
+      // When
+      CreateAndPostSalesHeader(SalesHeader,Item."No.",Location.Code,Qty,ItemTracking);
+
+      // Then
+      TestItemLedgerEntry(Item."No.",Location.Code);
+    END;
+
+    [Test]
+    PROCEDURE LotItemTrackingShipTransfer@1170170033();
+    VAR
+      Item@1170170002 : Record 27;
+      Qty@1170170001 : Decimal;
+      FromLocation@1170170000 : Record 14;
+      ToLocation@1170170004 : Record 14;
+      TransferHeader@1170170003 : Record 5740;
+      ItemJournalLine@1170170005 : Record 83;
+      ItemTracking@1170170006 : Boolean;
+    BEGIN
+      // Given
+      Qty := LibraryRandom.RandDec(10000,2);
+      ItemTracking := TRUE;
+      CreateItemAndLocation(Item,FromLocation,ItemTracking);
+
+      // When
+      CreateAndPostTransferOrder(TransferHeader,Item."No.",FromLocation.Code,ToLocation.Code,Qty,TRUE,FALSE,ItemTracking);
+
+      // Then
+      TestItemLedgerEntry(Item."No.",FromLocation.Code);
+    END;
+
+    [Test]
+    PROCEDURE LotItemTrackingReceiveTransfer@1170170031();
+    VAR
+      Item@1170170002 : Record 27;
+      Qty@1170170001 : Decimal;
+      FromLocation@1170170000 : Record 14;
+      ToLocation@1170170004 : Record 14;
+      TransferHeader@1170170003 : Record 5740;
+      ItemJournalLine@1170170005 : Record 83;
+      ItemTracking@1170170006 : Boolean;
+    BEGIN
+      // Given
+      Qty := LibraryRandom.RandDec(10000,2);
+      ItemTracking := TRUE;
+      CreateItemAndLocation(Item,FromLocation,ItemTracking);
+
+      // When
+      CreateAndPostTransferOrder(TransferHeader,Item."No.",FromLocation.Code,ToLocation.Code,Qty,TRUE,TRUE,ItemTracking);
+
+      // Then
+      TestItemLedgerEntry(Item."No.",FromLocation.Code);
+      TestItemLedgerEntry(Item."No.",ToLocation.Code);
+    END;
+
+    [Test]
+    [HandlerFunctions(MessageHandler)]
+    PROCEDURE LotItemTrackingPostAssemblyOrder@1170170030();
+    VAR
+      AssemblyHeader@1170170000 : Record 900;
+      Item@1170170003 : Record 27;
+      Qty@1170170005 : Decimal;
+      Location@1170170008 : Record 14;
+      ItemTracking@1170170001 : Boolean;
+      SerialNo@1170170002 : Code[20];
+      LotNo@1170170004 : Code[20];
+    BEGIN
+      // Given
+      Qty := LibraryRandom.RandDec(10000,2);
+      ItemTracking := TRUE;
+      CreateItemAndLocation(Item,Location,ItemTracking);
+      ConvertIntoAssemblyItem(Item,Location.Code);
+      PurchaseBOMComponents(Item."No.",Location.Code,Qty,ItemTracking,SerialNo,LotNo);
+
+      // When
+      CreateAndPostAssemblyHeader(AssemblyHeader,Item."No.",Location.Code,Qty,ItemTracking,SerialNo,LotNo);
+
+      // Then
+      TestItemLedgerEntry(Item."No.",Location.Code);
+    END;
+
+    [Test]
+    PROCEDURE LotItemTrackingPostProductionOrderOutput@1170170029();
+    VAR
+      ProductionOrder@1170170000 : Record 5405;
+      ItemJournalLine@1170170002 : Record 83;
+      Item@1170170003 : Record 27;
+      CompItem@1170170001 : Record 27;
+      Qty@1170170005 : Decimal;
+      Location@1170170008 : Record 14;
+      ItemTracking@1170170004 : Boolean;
+      SerialNo@1170170007 : Code[20];
+      LotNo@1170170006 : Code[20];
+    BEGIN
+      // Given
+      Qty := LibraryRandom.RandDec(10000,2);
+      ItemTracking := TRUE;
+      CreateItemAndLocation(Item,Location,ItemTracking);
+      ConvertIntoProductionItem(Item,CompItem,Location.Code);
+      CreateAndPostItemJournalLine(ItemJournalLine,CompItem."No.",Location.Code,Qty * 10,ItemJournalLine."Entry Type"::"Positive Adjmt.",ItemTracking,SerialNo,LotNo);
+
+      // When
+      CreateAndPostProductionOrder(ProductionOrder,Item."No.",Location.Code,Qty,ItemTracking,SerialNo,LotNo);
+
+      // Then
+      TestItemLedgerEntry(Item."No.",Location.Code);
+    END;
+
+    [Test]
+    PROCEDURE LotItemTrackingPostProductionOrderConsumption@1170170027();
+    VAR
+      ProductionOrder@1170170000 : Record 5405;
+      ItemJournalLine@1170170002 : Record 83;
+      Item@1170170003 : Record 27;
+      CompItem@1170170001 : Record 27;
+      Qty@1170170005 : Decimal;
+      Location@1170170008 : Record 14;
+      ItemTracking@1170170004 : Boolean;
+      SerialNo@1170170007 : Code[20];
+      LotNo@1170170006 : Code[20];
+    BEGIN
+      // Given
+      Qty := LibraryRandom.RandDec(10000,2);
+      ItemTracking := TRUE;
+      CreateItemAndLocation(Item,Location,ItemTracking);
+      ConvertIntoProductionItem(Item,CompItem,Location.Code);
+      CompItem.VALIDATE("Tariff No.",Item."Tariff No.");
+      CompItem.VALIDATE("Gross Weight",LibraryUtility.GenerateRandomFraction * 1000);
+      CompItem.VALIDATE("Net Weight",Item."Gross Weight" - 1);
+      CompItem.VALIDATE("Unit Volume",LibraryUtility.GenerateRandomFraction * 100);
+      CompItem.MODIFY;
+      CreateAndPostItemJournalLine(ItemJournalLine,CompItem."No.",Location.Code,Qty * 10,ItemJournalLine."Entry Type"::"Positive Adjmt.",ItemTracking,SerialNo,LotNo);
+
+      // When
+      CreateAndPostProductionOrder(ProductionOrder,Item."No.",Location.Code,Qty,ItemTracking,SerialNo,LotNo);
+      PostProdOrderConsumption(ProductionOrder,CompItem,Location.Code,Qty,ItemTracking,SerialNo,LotNo);
+
+      // Then
+      TestItemLedgerEntry(CompItem."No.",Location.Code);
+    END;
+
+    [MessageHandler]
+    PROCEDURE MessageHandler@1170170011(Message@1170170000 : Text[1024]);
+    BEGIN
+    END;
+
+    [ConfirmHandler]
+    PROCEDURE ConfirmHandler@15(Question@1000 : Text[1024];VAR Reply@1001 : Boolean);
+    BEGIN
+      Reply := TRUE;
+    END;
+
+    [ModalPageHandler]
+    PROCEDURE AvailabilityWindowHandler@43(VAR AsmAvailability@1000 : Page 908;VAR Response@1001 : Action);
+    BEGIN
+      Response := ACTION::Yes; // always confirm
+    END;
+
+    LOCAL PROCEDURE CreateItemAndLocation@1170170013(VAR Item@1170170000 : Record 27;VAR Location@1170170001 : Record 14;ItemTracking@1170170003 : Boolean);
+    VAR
+      InventoryPostingSetup@1170170002 : Record 5813;
+      ItemTrackingCode@1170170004 : Record 6502;
+    BEGIN
+      LibraryInventory.CreateItem(Item);
+      Item."Unit Volume" := LibraryRandom.RandDecInDecimalRange(3,10,1);
+      Item."Gross Weight" := LibraryRandom.RandDecInDecimalRange(3,10,1);
+      Item."Net Weight" := LibraryRandom.RandDecInDecimalRange(3,10,1);
+      IF ItemTracking THEN BEGIN
+        LibraryItemTracking.CreateItemTrackingCode(ItemTrackingCode,FALSE,TRUE);
+        Item.VALIDATE("Item Tracking Code",ItemTrackingCode.Code);
+      END;
+      Item.MODIFY;
+      LibraryWarehouse.CreateLocation(Location);
+      LibraryInventory.UpdateInventoryPostingSetup(Location);
+    END;
+
+    LOCAL PROCEDURE CreateAndPostItemJournalLine@1170170020(VAR ItemJournalLine@1170170000 : Record 83;ItemNo@1170170003 : Code[20];LocationCode@1170170004 : Code[10];Qty@1170170005 : Decimal;EntryType@1170170006 : Integer;ItemTracking@1170170007 : Boolean;VAR SerialNo@1170170009 : Code[20];VAR LotNo@1170170008 : Code[20]);
+    VAR
+      ItemJournalTemplate@1170170002 : Record 82;
+      ItemJournalBatch@1170170001 : Record 233;
+      ReservationEntry@1170170010 : Record 337;
+    BEGIN
+      LibraryInventory.CreateItemJournalTemplate(ItemJournalTemplate);
+      LibraryInventory.CreateItemJournalBatch(ItemJournalBatch,ItemJournalTemplate.Name);
+      LibraryInventory.CreateItemJournalLine(ItemJournalLine,ItemJournalTemplate.Name,ItemJournalBatch.Name,ItemJournalLine."Entry Type"::"Positive Adjmt.",ItemNo,Qty);
+      ItemJournalLine.VALIDATE("Location Code",LocationCode);
+      ItemJournalLine.MODIFY;
+      IF ItemTracking THEN BEGIN
+        IF LotNo = '' THEN
+          LotNo := LibraryUtility.GenerateRandomText(20);
+        LibraryItemTracking.CreateItemJournalLineItemTracking(ReservationEntry,ItemJournalLine,SerialNo,LotNo,ItemJournalLine."Quantity (Base)");
+      END;
+
+      // When
+      LibraryInventory.PostItemJournalLine(ItemJournalTemplate.Name,ItemJournalBatch.Name);
+    END;
+
+    LOCAL PROCEDURE CreateAndPostPurchaseHeader@1170170028(VAR PurchaseHeader@1170170000 : Record 38;ItemNo@1170170003 : Code[20];LocationCode@1170170002 : Code[10];Qty@1170170001 : Decimal;ItemTracking@1170170006 : Boolean);
+    VAR
+      Vendor@1170170004 : Record 23;
+      PurchaseLine@1170170005 : Record 39;
+      SerialNo@1170170007 : Code[20];
+      LotNo@1170170008 : Code[20];
+      ReservationEntry@1170170009 : Record 337;
+    BEGIN
+      LibraryPurchase.CreateVendor(Vendor);
+      LibraryPurchase.CreatePurchHeader(PurchaseHeader,PurchaseHeader."Document Type"::Order,Vendor."No.");
+      LibraryPurchase.CreatePurchaseLine(PurchaseLine,PurchaseHeader,PurchaseLine.Type::Item,ItemNo,Qty);
+      PurchaseLine.VALIDATE("Location Code",LocationCode);
+      PurchaseLine.MODIFY;
+      IF ItemTracking THEN BEGIN
+        LotNo := LibraryUtility.GenerateRandomText(20);
+        LibraryItemTracking.CreatePurchOrderItemTracking(ReservationEntry,PurchaseLine,SerialNo,LotNo,PurchaseLine."Quantity (Base)");
+      END;
+
+      LibraryPurchase.PostPurchaseDocument(PurchaseHeader,TRUE,FALSE);
+    END;
+
+    LOCAL PROCEDURE CreateAndPostSalesHeader@1170170032(VAR SalesHeader@1170170000 : Record 36;ItemNo@1170170003 : Code[20];LocationCode@1170170002 : Code[10];Qty@1170170001 : Decimal;ItemTracking@1170170006 : Boolean);
+    VAR
+      Customer@1170170004 : Record 18;
+      SalesLine@1170170005 : Record 37;
+      SerialNo@1170170009 : Code[20];
+      LotNo@1170170008 : Code[20];
+      ReservationEntry@1170170007 : Record 337;
+      ItemJournalLine@1170170010 : Record 83;
+    BEGIN
+      LibrarySales.CreateCustomer(Customer);
+      LibrarySales.CreateSalesHeader(SalesHeader,SalesHeader."Document Type"::Order,Customer."No.");
+      LibrarySales.CreateSalesLine(SalesLine,SalesHeader,SalesLine.Type::Item,ItemNo,Qty);
+      SalesLine.VALIDATE("Location Code",LocationCode);
+      SalesLine.MODIFY;
+      IF ItemTracking THEN BEGIN
+        LotNo := LibraryUtility.GenerateRandomText(20);
+        CreateAndPostItemJournalLine(ItemJournalLine,ItemNo,LocationCode,Qty * 10,ItemJournalLine."Entry Type"::"Positive Adjmt.",ItemTracking,SerialNo,LotNo);
+        LibraryItemTracking.CreateSalesOrderItemTracking(ReservationEntry,SalesLine,SerialNo,LotNo,SalesLine."Quantity (Base)");
+      END;
+      LibrarySales.PostSalesDocument(SalesHeader,TRUE,FALSE);
+    END;
+
+    LOCAL PROCEDURE CreateAndPostTransferOrder@1170170035(VAR TransferHeader@1170170003 : Record 5740;ItemNo@1170170002 : Code[20];FromLocationCode@1170170001 : Code[10];VAR ToLocationCode@1170170007 : Code[10];Qty@1170170000 : Decimal;Send@1170170004 : Boolean;Receive@1170170005 : Boolean;ItemTracking@1170170009 : Boolean);
+    VAR
+      TransferLine@1170170006 : Record 5741;
+      ToLocation@1170170011 : Record 14;
+      InTransitLocation@1170170008 : Record 14;
+      Item@1170170012 : Record 27;
+      ItemJournalLine@1170170014 : Record 83;
+      SerialNo@1170170013 : Code[20];
+      LotNo@1170170010 : Code[20];
+      ReservationEntry@1170170015 : Record 337;
+    BEGIN
+      Item.GET(ItemNo);
+      LibraryWarehouse.CreateLocation(ToLocation);
+      ToLocationCode := ToLocation.Code;
+      LibraryInventory.UpdateInventoryPostingSetup(ToLocation);
+      LibraryWarehouse.CreateInTransitLocation(InTransitLocation);
+
+      CreateAndPostItemJournalLine(ItemJournalLine,ItemNo,FromLocationCode,Qty,ItemJournalLine."Entry Type"::"Positive Adjmt.",ItemTracking,SerialNo,LotNo);
+
+      LibraryInventory.CreateTransferHeader(TransferHeader,FromLocationCode,ToLocationCode,InTransitLocation.Code);
+      LibraryInventory.CreateTransferLine(TransferHeader,TransferLine,ItemNo,Qty);
+      IF ItemTracking THEN
+        LibraryItemTracking.CreateTransferOrderItemTracking(ReservationEntry,TransferLine,SerialNo,LotNo,TransferLine."Quantity (Base)");
+      LibraryInventory.PostTransferHeader(TransferHeader,Send,Receive);
+    END;
+
+    LOCAL PROCEDURE CreateAndPostAssemblyHeader@1170170012(VAR AssemblyHeader@1170170004 : Record 900;ItemNo@1170170003 : Code[20];LocationCode@1170170002 : Code[10];Qty@1170170001 : Decimal;ItemTracking@1170170007 : Boolean;VAR SerialNo@1170170006 : Code[20];VAR LotNo@1170170000 : Code[20]);
+    VAR
+      AssemblyLine@1170170005 : Record 901;
+      ReservationEntry@1170170008 : Record 337;
+    BEGIN
+      LibraryAssembly.CreateAssemblyHeader(AssemblyHeader,WORKDATE,ItemNo,LocationCode,Qty,'');
+      IF ItemTracking THEN BEGIN
+        IF LotNo = '' THEN
+          LotNo := LibraryUtility.GenerateRandomText(20);
+        LibraryItemTracking.CreateAssemblyHeaderItemTracking(ReservationEntry,AssemblyHeader,SerialNo,LotNo,AssemblyHeader."Quantity (Base)");
+      END;
+      LibraryAssembly.UpdateAssemblyHeader(AssemblyHeader,AssemblyHeader.FIELDNO("Location Code"),LocationCode);
+      LibraryAssembly.PostAssemblyHeader(AssemblyHeader,'');
+    END;
+
+    LOCAL PROCEDURE ConvertIntoAssemblyItem@1170170009(VAR Item@1170170000 : Record 27;LocationCode@1170170003 : Code[20]);
+    BEGIN
+      LibraryAssembly.CreateAssemblyList(Item."Costing Method",Item."No.",TRUE,3,0,0,1,Item."Gen. Prod. Posting Group",Item."Inventory Posting Group");
+    END;
+
+    LOCAL PROCEDURE PurchaseBOMComponents@1170170018(VAR ParentItemNo@1170170000 : Code[20];LocationCode@1170170003 : Code[20];Qty@1170170004 : Decimal;ItemTracking@1170170005 : Boolean;VAR SerialNo@1170170007 : Code[20];VAR LotNo@1170170006 : Code[20]);
+    VAR
+      BOMComponent@1170170001 : Record 90;
+      ItemJournalLine@1170170002 : Record 83;
+    BEGIN
+      BOMComponent.RESET;
+      BOMComponent.SETRANGE("Parent Item No.",ParentItemNo);
+      BOMComponent.FINDSET;
+      REPEAT
+        CreateAndPostItemJournalLine(ItemJournalLine,BOMComponent."No.",LocationCode,(Qty * BOMComponent."Quantity per") + 100,ItemJournalLine."Entry Type"::"Positive Adjmt.",ItemTracking,SerialNo,LotNo);
+      UNTIL BOMComponent.NEXT = 0;
+    END;
+
+    LOCAL PROCEDURE CreateAndPostProductionOrder@1170170021(VAR ProductionOrder@1170170004 : Record 5405;ItemNo@1170170003 : Code[20];LocationCode@1170170002 : Code[10];Qty@1170170001 : Decimal;ItemTracking@1170170008 : Boolean;VAR SerialNo@1170170007 : Code[20];VAR LotNo@1170170006 : Code[20]);
+    VAR
+      ItemJournalLine@1170170000 : Record 83;
+      ProdOrderLine@1170170005 : Record 5406;
+      ReservationEntry@1170170009 : Record 337;
+    BEGIN
+      CreateAndRefreshProductionOrder(ProductionOrder,ProductionOrder.Status::Released,ItemNo,LocationCode,Qty);
+      ProdOrderLine.GET(ProductionOrder.Status,ProductionOrder."No.",10000);
+      IF ItemTracking THEN BEGIN
+        IF LotNo = '' THEN
+          LotNo := LibraryUtility.GenerateRandomText(20);
+        LibraryItemTracking.CreateProdOrderItemTracking(ReservationEntry,ProdOrderLine,SerialNo,LotNo,ProdOrderLine."Quantity (Base)");
+      END;
+      CreateOutputJournalLine(ItemJournalLine,ProdOrderLine,0,0,Qty);
+      IF ItemTracking THEN BEGIN
+        IF LotNo = '' THEN
+          LotNo := LibraryUtility.GenerateRandomText(20);
+        LibraryItemTracking.CreateItemJournalLineItemTracking(ReservationEntry,ItemJournalLine,SerialNo,LotNo,ItemJournalLine."Quantity (Base)");
+      END;
+      LibraryInventory.PostItemJournalLine(ItemJournalLine."Journal Template Name",ItemJournalLine."Journal Batch Name");
+    END;
+
+    LOCAL PROCEDURE ConvertIntoProductionItem@1170170019(VAR Item@1170170000 : Record 27;VAR CompItem@1170170001 : Record 27;LocationCode@1170170003 : Code[20]);
+    BEGIN
+      Item.VALIDATE("Replenishment System",Item."Replenishment System"::"Prod. Order");
+      Item.MODIFY(TRUE);
+      CreateProductionItemWithComponent(Item,CompItem,3,1);
+    END;
+
+    LOCAL PROCEDURE CreateAndRefreshProductionOrder@63(VAR ProductionOrder@1002 : Record 5405;Status@1003 : Option;SourceNo@1001 : Code[20];LocationCode@1170170000 : Code[10];Quantity@1000 : Decimal);
+    BEGIN
+      LibraryManufacturing.CreateProductionOrder(ProductionOrder,Status,ProductionOrder."Source Type"::Item,SourceNo,Quantity);
+      ProductionOrder.VALIDATE("Location Code",LocationCode);
+      ProductionOrder.MODIFY(TRUE);
+      LibraryManufacturing.RefreshProdOrder(ProductionOrder,FALSE,TRUE,TRUE,TRUE,FALSE);
+    END;
+
+    LOCAL PROCEDURE CreateOutputJournalLine@197(VAR ItemJournalLine@1002 : Record 83;ProdOrderLine@1000 : Record 5406;NewSetupTime@1001 : Decimal;NewRunTime@1004 : Decimal;NewOutputQty@1005 : Decimal);
+    VAR
+      ItemJournalBatch@1003 : Record 233;
+    BEGIN
+      LibraryPatterns.MAKEOutputJournalLine(ItemJournalBatch,ProdOrderLine,ProdOrderLine."Due Date",ProdOrderLine.Quantity,300);
+      FindItemJournalLine(ItemJournalLine,ItemJournalBatch."Journal Template Name",ItemJournalBatch.Name);
+
+      WITH ItemJournalLine DO BEGIN
+        VALIDATE("Item No.");
+        VALIDATE("Setup Time",NewSetupTime);
+        VALIDATE("Run Time",NewRunTime);
+        VALIDATE("Output Quantity",NewOutputQty);
+        MODIFY(TRUE);
+      END;
+    END;
+
+    LOCAL PROCEDURE CreateProductionItemWithComponent@301(VAR ProdItem@1000 : Record 27;VAR CompItem@1001 : Record 27;QtyPer@1002 : Decimal;RoundingPrecision@1003 : Decimal);
+    VAR
+      RoutingLink@1004 : Record 99000777;
+      RoutingHeader@1005 : Record 99000763;
+      ProductionBOMHeader@1006 : Record 99000771;
+      ProductionBOMLine@1007 : Record 99000772;
+    BEGIN
+      LibraryInventory.CreateItem(CompItem);
+      CompItem.VALIDATE("Replenishment System",CompItem."Replenishment System"::Purchase);
+      CompItem.VALIDATE("Rounding Precision",RoundingPrecision);
+      CompItem.MODIFY(TRUE);
+      LibraryManufacturing.CreateProductionBOMHeader(ProductionBOMHeader,ProdItem."Base Unit of Measure");
+      LibraryManufacturing.CreateProductionBOMLine(
+        ProductionBOMHeader,ProductionBOMLine,'',ProductionBOMLine.Type::Item,CompItem."No.",QtyPer);
+      ChangeStatusOfProductionBOM(ProductionBOMHeader,ProductionBOMHeader.Status::Certified);
+      UpdateProductionBOMOnItem(ProdItem,ProductionBOMHeader."No.");
+    END;
+
+    LOCAL PROCEDURE ChangeStatusOfProductionBOM@23(VAR ProductionBOMHeader@1000 : Record 99000771;Status@1001 : Option);
+    BEGIN
+      ProductionBOMHeader.VALIDATE(Status,Status);
+      ProductionBOMHeader.MODIFY(TRUE);
+    END;
+
+    LOCAL PROCEDURE UpdateProductionBOMOnItem@54(VAR Item@1000 : Record 27;ProductionBOMNo@1001 : Code[20]);
+    BEGIN
+      Item.GET(Item."No.");  // Get updated instance of Item Record for avoid another user modified error.
+      Item.VALIDATE("Production BOM No.",ProductionBOMNo);
+      Item.MODIFY(TRUE);
+    END;
+
+    LOCAL PROCEDURE PostProdOrderConsumption@1170170017(ProductionOrder@1170170000 : Record 5405;CompItem@1170170001 : Record 27;LocationCode@1170170002 : Code[10];Qty@1170170003 : Decimal;ItemTracking@1170170009 : Boolean;VAR SerialNo@1170170008 : Code[20];VAR LotNo@1170170006 : Code[20]);
+    VAR
+      ConsumptionItemJournalTemplate@1170170005 : Record 82;
+      ConsumptionItemJournalBatch@1170170004 : Record 233;
+      ItemJournalLine@1170170007 : Record 83;
+      ReservationEntry@1170170010 : Record 337;
+    BEGIN
+      LibraryInventory.SelectItemJournalTemplateName(ConsumptionItemJournalTemplate,ConsumptionItemJournalTemplate.Type::Consumption);
+      LibraryInventory.SelectItemJournalBatchName(ConsumptionItemJournalBatch,ConsumptionItemJournalTemplate.Type,ConsumptionItemJournalTemplate.Name);
+      LibraryInventory.ClearItemJournal(ConsumptionItemJournalTemplate,ConsumptionItemJournalBatch);
+      LibraryManufacturing.CalculateConsumption(
+        ProductionOrder."No.",ConsumptionItemJournalTemplate.Name,ConsumptionItemJournalBatch.Name);
+      ItemJournalLine.RESET;
+      ItemJournalLine.SETRANGE("Journal Template Name",ConsumptionItemJournalTemplate.Name);
+      ItemJournalLine.SETRANGE("Journal Batch Name",ConsumptionItemJournalBatch.Name);
+      ItemJournalLine.FINDSET;
+      REPEAT
+        ItemJournalLine."Location Code" := LocationCode;
+        ItemJournalLine.MODIFY;
+        IF ItemTracking THEN BEGIN
+          IF LotNo = '' THEN
+            LotNo := LibraryUtility.GenerateRandomText(20);
+          LibraryItemTracking.CreateItemJournalLineItemTracking(ReservationEntry,ItemJournalLine,SerialNo,LotNo,ItemJournalLine."Quantity (Base)");
+        END;
+      UNTIL ItemJournalLine.NEXT = 0;
+      LibraryInventory.PostItemJournalLine(ConsumptionItemJournalTemplate.Name,ConsumptionItemJournalBatch.Name);
+    END;
+
+    LOCAL PROCEDURE TestItemLedgerEntry@1170170014(ItemNo@1170170000 : Code[20];LocationCode@1170170005 : Code[10]);
+    VAR
+      Item@1170170003 : Record 27;
+      ItemLedgerEntry@1170170001 : Record 32;
+    BEGIN
+      Item.GET(ItemNo);
+
+      ItemLedgerEntry.RESET;
+      ItemLedgerEntry.SETRANGE("Item No.",ItemNo);
+      ItemLedgerEntry.SETRANGE("Location Code",LocationCode);
+      ItemLedgerEntry.FINDLAST;
+
+      Item.TESTFIELD("Gross Weight");
+      Item.TESTFIELD("Net Weight");
+      Item.TESTFIELD("Unit Volume");
+    END;
+
+    LOCAL PROCEDURE FindItemJournalLine@60(VAR ItemJournalLine@1000 : Record 83;JournalTemplateName@1001 : Code[10];JournalBatchName@1002 : Code[10]);
+    BEGIN
+      FilterOnItemJournalLine(ItemJournalLine,JournalTemplateName,JournalBatchName);
+      ItemJournalLine.FINDFIRST;
+    END;
+
+    LOCAL PROCEDURE FilterOnItemJournalLine@175(VAR ItemJournalLine@1000 : Record 83;JournalTemplateName@1001 : Code[10];JournalBatchName@1002 : Code[10]);
+    BEGIN
+      ItemJournalLine.SETRANGE("Journal Template Name",JournalTemplateName);
+      ItemJournalLine.SETRANGE("Journal Batch Name",JournalBatchName);
+    END;
+
+    BEGIN
+    END.
+  }
+}
+
