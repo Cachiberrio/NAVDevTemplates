@@ -1,0 +1,9 @@
+Dejo un fichero con los objetos de prueba para que se puedan copiar las funciones sin problemas.
+Se dispone de las siguientes funciones:
+	• GETHttpRequest
+	• POSTHttpRequest: Muestra un mensaje de texto con la respuesta de la llamada al servicio.
+	• POSTHttpRequestToXMLBuffer: Pasa la respuesta de la llamada a una serie de registros de la tabla XMLBuffer y se muestra en el subformulario de la pantalla.
+	• POSTHttpRequestToJSONFile: Pasa la respuesta de la llamada a un fichero JSON.
+	• POSTHttpRequestToXMLFile: Pasa la respuesta de la llamada a un fichero XML.
+
+POSTHttpRequestToXMLPort: Pasa la respuesta de la llamada a un fichero XML y despues procesa el fichero mediante un XMLPort.

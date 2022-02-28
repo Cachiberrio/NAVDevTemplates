@@ -1,0 +1,312 @@
+OBJECT Codeunit 7014458 Web service prueba
+{
+  OBJECT-PROPERTIES
+  {
+    Date=07/04/20;
+    Time=14:07:51;
+    Version List=BORRAR,PRUEBA;
+  }
+  PROPERTIES
+  {
+    OnRun=BEGIN
+          END;
+
+  }
+  CODE
+  {
+
+    [External]
+    PROCEDURE CadenaDoble@1170170000(Cadena@1170170000 : Text[50]) : Text[100];
+    BEGIN
+      EXIT(Cadena+Cadena);
+    END;
+
+    BEGIN
+    END.
+  }
+}
+
+OBJECT Codeunit 7014462 Llamada WS externo
+{
+  OBJECT-PROPERTIES
+  {
+    Date=07/04/20;
+    Time=17:40:58;
+    Modified=Yes;
+    Version List=OPL,VTA;
+  }
+  PROPERTIES
+  {
+    OnRun=BEGIN
+          END;
+
+  }
+  CODE
+  {
+    VAR
+      ErrURLVacia@1170170000 : TextConst 'ESP=La URL est  vac¡a.';
+      CadenaCodeunit@1170170001 : TextConst 'ESP=/Codeunit/';
+
+    [TryFunction]
+    PROCEDURE LlamarWSConDocumentoXML@1170170000(URL@1170170000 : Text;VAR XMLRequest@1170170001 : DotNet "'System.Xml, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Xml.XmlDocument";VAR XMLResponse@1170170003 : DotNet "'System.Xml, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Xml.XmlDocument");
+    VAR
+      Request@1170170002 : DotNet "'System, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Net.HttpWebRequest";
+      Response@1170170004 : DotNet "'System, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Net.HttpWebResponse";
+    BEGIN
+      IF URL = '' THEN
+        ERROR(ErrURLVacia);
+      IniciarRequestSOAPXML(Request,URL,XMLRequest);
+      ObtenerRespuesta(Request,XMLResponse);
+    END;
+
+    LOCAL PROCEDURE IniciarRequestSOAPXML@1170170001(VAR Request@1170170000 : DotNet "'System, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Net.HttpWebRequest";URL@1170170001 : Text[250];VAR XMLRequest@1170170002 : DotNet "'System.Xml, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Xml.XmlDocument");
+    BEGIN
+      Request := Request.HttpWebRequest;
+      Request := Request.Create(URL);
+      Request.Method := 'POST';
+      Request.ContentType := 'text/xml; charset="utf-8"';
+      //Request.Accept := 'text/xml,text/html';
+      //Request.Headers.Add('SOAPAction', '""' );
+      XMLRequest.Save(Request.GetRequestStream);
+    END;
+
+    LOCAL PROCEDURE ObtenerRespuesta@1170170009(VAR Request@1170170002 : DotNet "'System, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Net.HttpWebRequest";VAR XMLResponse@1170170001 : DotNet "'System.Xml, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Xml.XmlDocument");
+    VAR
+      Response@1170170000 : DotNet "'System, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Net.HttpWebResponse";
+    BEGIN
+      Response := Request.GetResponse();
+      XMLResponse := XMLResponse.XmlDocument;
+      XMLResponse.Load(Response.GetResponseStream);
+    END;
+
+    PROCEDURE NAVBCLlamarWS@1170170006(URL@1170170004 : Text;VAR XMLResponse@1170170003 : DotNet "'System.Xml, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Xml.XmlDocument";User@1170170008 : Text[50];Pass@1170170007 : Text[50];Metodo@1170170001 : Text[200];ParametrosXML@1170170009 : Text);
+    VAR
+      XMLRequest@1170170000 : DotNet "'System.Xml, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Xml.XmlDocument";
+      XmlTexto@1170170002 : Text;
+      Request@1170170006 : DotNet "'System, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Net.HttpWebRequest";
+      Response@1170170005 : DotNet "'System, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Net.HttpWebResponse";
+    BEGIN
+      XMLRequest := XMLRequest.XmlDocument;
+      XmlTexto := NAVBCObtenerCadenaLlamada(URL,Metodo,ParametrosXML);
+      XMLRequest.LoadXml(XmlTexto);
+      IF URL = '' THEN
+        ERROR(ErrURLVacia);
+      NAVBCIniciarRequestSOAPXML(Request,URL,XMLRequest,User,Pass,Metodo);
+      ObtenerRespuesta(Request,XMLResponse);
+    END;
+
+    LOCAL PROCEDURE NAVBCIniciarRequestSOAPXML@1170170003(VAR Request@1170170000 : DotNet "'System, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Net.HttpWebRequest";URL@1170170001 : Text[250];VAR XMLRequest@1170170002 : DotNet "'System.Xml, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Xml.XmlDocument";User@1170170005 : Text[50];Pass@1170170004 : Text[50];Metodo@1170170003 : Text[200]);
+    VAR
+      Credential@1170170006 : DotNet "'System, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Net.NetworkCredential";
+    BEGIN
+      Request := Request.HttpWebRequest;
+      Request := Request.Create(URL);
+
+      Request.Method := 'POST';
+      Request.ContentType := 'application/xml';
+      IF User <> '' THEN BEGIN
+        Credential := Credential.NetworkCredential;
+        Credential.UserName := User;
+        Credential.Password := Pass;
+      END ELSE
+        SetDefaultCredential(Credential);
+      Request.Credentials(Credential);
+
+      IF Metodo <> '' THEN
+        Request.Headers.Add('SOAPAction',Metodo);
+      XMLRequest.Save(Request.GetRequestStream);
+    END;
+
+    LOCAL PROCEDURE NAVBCObtenerCadenaLlamada@1170170017(URL@1170170000 : Text;Metodo@1170170002 : Text[200];TextoXMLparametros@1170170001 : Text) : Text;
+    BEGIN
+      EXIT(
+      '<Envelope xmlns="http://schemas.xmlsoap.org/soap/envelope/">'+
+      '<Body>'+
+      '<' + Metodo +' xmlns="urn:microsoft-dynamics-schemas/codeunit/'
+      +ObtenerAliasServicioDeURL(URL)+'">'+
+      TextoXMLparametros +
+      '</' + Metodo + '>'+
+      '</Body>'+
+      '</Envelope>');
+    END;
+
+    PROCEDURE NAVBCA¤adirParametroNuevo@1170170004(ParametrosAnterior@1170170000 : Text;NombreParametroNuevo@1170170001 : Text[100];ValorParametroNuevo@1170170002 : Text[100]) : Text;
+    BEGIN
+      EXIT(ParametrosAnterior+STRSUBSTNO('<%1>%2</%1>',NombreParametroNuevo,ValorParametroNuevo));
+    END;
+
+    PROCEDURE ObtenerAliasServicioDeURL@1170170005(URL@1170170000 : Text) : Text[50];
+    VAR
+      PrincipioAlias@1170170001 : Integer;
+    BEGIN
+      PrincipioAlias := STRPOS(URL,CadenaCodeunit);
+      IF PrincipioAlias = 0 THEN
+        EXIT;
+      PrincipioAlias := PrincipioAlias + STRLEN(CadenaCodeunit);
+      EXIT(COPYSTR(URL,PrincipioAlias));
+    END;
+
+    PROCEDURE SetDefaultCredential@1170170002(VAR Credential@1170170001 : DotNet "'System, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Net.NetworkCredential");
+    VAR
+      CredentialCache@1170170000 : DotNet "'System, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Net.CredentialCache";
+    BEGIN
+      // Usar credencial por defecto, utiliza el usuario del servicio habitualmente NT AUTHORITY\NETWORK SERVICE
+      // Para que no devuelva error 401 Unauthorized crear dicho usuario en NAV con suficientes permisos.
+      Credential := Credential.NetworkCredential;
+      CredentialCache := CredentialCache.CredentialCache;
+      Credential := CredentialCache.DefaultCredentials;
+    END;
+
+    BEGIN
+    {
+      68844 JA 270220 Creado objeto.
+    }
+    END.
+  }
+}
+
+OBJECT Page 50032 Conexi¢n WS
+{
+  OBJECT-PROPERTIES
+  {
+    Date=07/04/20;
+    Time=18:02:16;
+    Modified=Yes;
+    Version List=BORRAR,PRUEBA;
+  }
+  PROPERTIES
+  {
+    SaveValues=Yes;
+    OnOpenPage=BEGIN
+                 IniciarParametros;
+               END;
+
+    ActionList=ACTIONS
+    {
+      { 1170170008;  ;ActionContainer;
+                      ActionContainerType=ActionItems }
+      { 1170170009;1 ;Action    ;
+                      CaptionML=ESP=Llamar servicio;
+                      Promoted=Yes;
+                      PromotedCategory=Process;
+                      OnAction=BEGIN
+                                 AccessWebServiceS;
+                               END;
+                                }
+      { 1170170010;1 ;Action    ;
+                      CaptionML=ESP=Llamar servico OTRO;
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      Image=Alerts;
+                      PromotedCategory=Process;
+                      OnAction=BEGIN
+                                 AccessWebServiceViaSoapStd;
+                               END;
+                                }
+    }
+  }
+  CONTROLS
+  {
+    { 1170170000;;Container;
+                CaptionML=ESP=General;
+                ContainerType=ContentArea }
+
+    { 1170170001;1;Field  ;
+                CaptionML=ESP=URL;
+                SourceExpr=URL }
+
+    { 1170170002;1;Field  ;
+                CaptionML=ESP=M‚todo;
+                SourceExpr=Method }
+
+    { 1170170006;1;Field  ;
+                CaptionML=ESP=Nombre par metro;
+                SourceExpr=NombreParametro }
+
+    { 1170170007;1;Field  ;
+                CaptionML=ESP=Par metro;
+                SourceExpr=Parametro }
+
+    { 1170170003;1;Field  ;
+                CaptionML=ESP=Tipo conexi¢n;
+                SourceExpr=ConectionType }
+
+    { 1170170004;1;Field  ;
+                CaptionML=ESP=Usuario;
+                SourceExpr=UserName }
+
+    { 1170170005;1;Field  ;
+                CaptionML=ESP=Contrase¤a;
+                SourceExpr=Pass }
+
+  }
+  CODE
+  {
+    VAR
+      URL@1170170000 : Text;
+      Method@1170170001 : Text[100];
+      UserName@1170170002 : Text[50];
+      Pass@1170170003 : Text[50];
+      ConectionType@1170170004 : 'Windows,UserLogin';
+      NombreParametro@1170170005 : Text[50];
+      Parametro@1170170006 : Text[50];
+
+    LOCAL PROCEDURE AccessWebServiceS@1170170004();
+    VAR
+      SoapProxyClientMgt@1170170000 : Codeunit 7014451;
+      TempBlob@1170170001 : TEMPORARY Record 99008535;
+      XMLBuffer@1170170002 : TEMPORARY Record 1235;
+      LlamadaWSExterno@1170170003 : Codeunit 7014462;
+    BEGIN
+      WITH SoapProxyClientMgt DO BEGIN
+        CreateSoapProxy(URL);
+        IF ConectionType = ConectionType::Windows THEN BEGIN
+          InitParameters(1);
+          SetDefaultCredential;
+          SetParameterValue(Parametro,1);
+        END ELSE BEGIN
+          InitParameters(1);
+          SetCredential(UserName,Pass);
+          SetParameterValue(Parametro,1);
+        END;
+        InvokeMethod(LlamadaWSExterno.ObtenerAliasServicioDeURL(URL),Method,TempBlob);//Llamada
+
+        XMLBuffer.LoadFromText(TempBlob.ReadAsTextWithCRLFLineSeparator);//Cargar respuesta en Buffer.
+        XMLBuffer.FINDSET;
+        REPEAT
+          MESSAGE('%1 %2',XMLBuffer.Value,XMLBuffer.Name);
+        UNTIL XMLBuffer.NEXT = 0;
+      END;
+    END;
+
+    LOCAL PROCEDURE IniciarParametros@1170170000();
+    BEGIN
+      URL := 'http://bc.vintae.com:7017/BI/WS/ZuzonBAR/Codeunit/WebServicePrueba';
+      //URL := 'http://BC365.TIPSA.LOCAL:7047/VTA140/WS/CRONUS%20Vintae/Codeunit/WSMuySimple';
+      Method := 'CadenaDoble';
+      NombreParametro:= 'cadena';
+      Parametro := 'UNO';
+      ConectionType := ConectionType::UserLogin;
+      UserName := 'Powerbi';
+      Pass := '1WjKZ0JwWWBSr6hyqSGqdHkrxZXnYk3fovNFn5OWWPE=';
+      //UserName := 'ja';
+    END;
+
+    LOCAL PROCEDURE AccessWebServiceViaSoapStd@1170170001();
+    VAR
+      LlamadaWSExterno@1170170003 : Codeunit 7014462;
+      XMLResponse@1170170001 : DotNet "'System.Xml, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Xml.XmlDocument";
+      ParametrosXML@1170170000 : Text;
+    BEGIN
+      WITH LlamadaWSExterno DO BEGIN
+        ParametrosXML := NAVBCA¤adirParametroNuevo(ParametrosXML,NombreParametro,Parametro);
+        NAVBCLlamarWS(URL,XMLResponse,UserName,Pass,Method,ParametrosXML);
+      END;
+      MESSAGE('%1',XMLResponse.OuterXml);
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

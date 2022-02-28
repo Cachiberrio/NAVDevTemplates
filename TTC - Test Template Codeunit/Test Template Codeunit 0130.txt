@@ -1,0 +1,44 @@
+OBJECT Codeunit 91099 Patr¢n test
+{
+  OBJECT-PROPERTIES
+  {
+    Date=22/10/19;
+    Time=10:39:15;
+    Version List=Test Pattern;
+  }
+  PROPERTIES
+  {
+    Subtype=Test;
+    OnRun=BEGIN
+          END;
+
+  }
+  CODE
+  {
+    VAR
+      LibrarySales@1170170006 : Codeunit 130509;
+      LibraryUtility@1170170005 : Codeunit 131000;
+      LibraryERM@1170170004 : Codeunit 131300;
+      LibraryPurchase@1170170003 : Codeunit 130512;
+      LibraryWarehouse@1170170002 : Codeunit 132204;
+      LibraryAssembly@1170170001 : Codeunit 132207;
+      LibraryRandom@1170170000 : Codeunit 130440;
+      LibraryKitting@1170170008 : Codeunit 132205;
+      LibraryManufacturing@1170170007 : Codeunit 132202;
+
+    [ConfirmHandler]
+    PROCEDURE ConfirmHandler@15(Question@1000 : Text[1024];VAR Reply@1001 : Boolean);
+    BEGIN
+      Reply := TRUE;
+    END;
+
+    [MessageHandler]
+    PROCEDURE MessageHandler@1170170000(Message@1170170000 : Text[1024]);
+    BEGIN
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

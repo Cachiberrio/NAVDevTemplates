@@ -1,0 +1,646 @@
+OBJECT Codeunit 52300 Test Http Request Mgt.
+{
+  OBJECT-PROPERTIES
+  {
+    Date=09/08/21;
+    Time=[ 8:21:01];
+    Modified=Yes;
+    Version List=Test Http Request;
+  }
+  PROPERTIES
+  {
+    OnRun=BEGIN
+          END;
+
+  }
+  CODE
+  {
+    VAR
+      InvalidResponseErr@1170170000 : TextConst 'ENU=The response was not valid.;ESP=La respuesta no era v lida.';
+
+    PROCEDURE GETHttpRequest@1170170012(NotificationUrl@1170170000 : Text;JSONText@1170170001 : Text);
+    VAR
+      TypeHelper@1170170003 : Codeunit 10;
+      HttpWebRequest@1170170010 : DotNet "'System, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Net.HttpWebRequest";
+      WebRequestHelper@1170170007 : Codeunit 1299;
+      HttpWebResponse@1170170006 : DotNet "'System, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Net.HttpWebResponse";
+      RequestStr@1170170002 : DotNet "'mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.IO.Stream";
+      StreamWriter@1170170004 : DotNet "'mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.IO.StreamWriter";
+      Encoding@1170170005 : DotNet "'mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Text.Encoding";
+      InStrm@1170170008 : InStream;
+      InputText@1170170009 : Text;
+    BEGIN
+      HttpWebRequest := HttpWebRequest.Create(NotificationUrl);
+      HttpWebRequest.Method := 'GET';
+      HttpWebRequest.ContentType('application/json');
+      HttpWebResponse := HttpWebRequest.GetResponse;
+      InStrm := HttpWebResponse.GetResponseStream;
+      InStrm.READTEXT(InputText);
+      MESSAGE('%1',InputText);
+      HttpWebResponse.Close; // close connection
+      HttpWebResponse.Dispose; // cleanup of IDisposable
+    END;
+
+    PROCEDURE POSTHttpRequest@1170170009(NotificationUrl@1170170000 : Text;JSONText@1170170001 : Text);
+    VAR
+      TypeHelper@1170170003 : Codeunit 10;
+      HttpWebRequest@1170170010 : DotNet "'System, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Net.HttpWebRequest";
+      WebRequestHelper@1170170007 : Codeunit 1299;
+      HttpWebResponse@1170170006 : DotNet "'System, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Net.HttpWebResponse";
+      RequestStr@1170170002 : DotNet "'mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.IO.Stream";
+      StreamWriter@1170170004 : DotNet "'mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.IO.StreamWriter";
+      Encoding@1170170005 : DotNet "'mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Text.Encoding";
+      InStrm@1170170008 : InStream;
+      InputText@1170170009 : Text;
+    BEGIN
+      HttpWebRequest := HttpWebRequest.Create(NotificationUrl);
+      HttpWebRequest.Method := 'POST';
+      HttpWebRequest.ContentType('application/json');
+      RequestStr := HttpWebRequest.GetRequestStream;
+      StreamWriter := StreamWriter.StreamWriter(RequestStr,Encoding.ASCII);
+      StreamWriter.Write(JSONText);
+      StreamWriter.Flush;
+      StreamWriter.Close;
+      StreamWriter.Dispose;
+      HttpWebResponse := HttpWebRequest.GetResponse;
+      InStrm := HttpWebResponse.GetResponseStream;
+      InStrm.READTEXT(InputText);
+      MESSAGE('%1',InputText);
+      HttpWebResponse.Close; // close connection
+      HttpWebResponse.Dispose; // cleanup of IDisposable
+    END;
+
+    PROCEDURE POSTHttpRequestToXMLBuffer@1170170010(NotificationUrl@1170170000 : Text;JSONText@1170170001 : Text;VAR XMLBuffer@1170170014 : TEMPORARY Record 1235);
+    VAR
+      TypeHelper@1170170003 : Codeunit 10;
+      HttpWebRequest@1170170010 : DotNet "'System, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Net.HttpWebRequest";
+      WebRequestHelper@1170170007 : Codeunit 1299;
+      HttpWebResponse@1170170006 : DotNet "'System, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Net.HttpWebResponse";
+      RequestStr@1170170002 : DotNet "'mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.IO.Stream";
+      StreamWriter@1170170004 : DotNet "'mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.IO.StreamWriter";
+      Encoding@1170170005 : DotNet "'mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Text.Encoding";
+      InStrm@1170170008 : InStream;
+      InputText@1170170009 : Text;
+      SuggestColDefinitionJson@1170170011 : Codeunit 1238;
+      OutStrm@1170170013 : OutStream;
+      XMLBufferWriter@1170170015 : Codeunit 1235;
+      GetJsonStructure@1170170016 : Codeunit 1237;
+      TempBlob@1170170012 : TEMPORARY Record 99008535;
+    BEGIN
+      HttpWebRequest := HttpWebRequest.Create(NotificationUrl);
+      HttpWebRequest.Method := 'POST';
+      HttpWebRequest.ContentType('application/json');
+      RequestStr := HttpWebRequest.GetRequestStream;
+      StreamWriter := StreamWriter.StreamWriter(RequestStr,Encoding.ASCII);
+      StreamWriter.Write(JSONText);
+      StreamWriter.Flush;
+      StreamWriter.Close;
+      StreamWriter.Dispose;
+      HttpWebResponse := HttpWebRequest.GetResponse;
+      InStrm := HttpWebResponse.GetResponseStream;
+      TempBlob.Blob.CREATEOUTSTREAM(OutStrm);
+      IF NOT GetJsonStructure.JsonToXML(InStrm,OutStrm) THEN
+        IF NOT GetJsonStructure.JsonToXMLCreateDefaultRoot(InStrm,OutStrm) THEN
+          ERROR(InvalidResponseErr);
+      XMLBufferWriter.GenerateStructure(XMLBuffer,OutStrm);
+
+      HttpWebResponse.Close; // close connection
+      HttpWebResponse.Dispose; // cleanup of IDisposable
+    END;
+
+    PROCEDURE POSTHttpRequestToJSONFile@1170170015(NotificationUrl@1170170000 : Text;JSONText@1170170001 : Text;VAR XMLBuffer@1170170014 : TEMPORARY Record 1235;FilePath@1170170012 : Text);
+    VAR
+      TypeHelper@1170170003 : Codeunit 10;
+      HttpWebRequest@1170170010 : DotNet "'System, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Net.HttpWebRequest";
+      WebRequestHelper@1170170007 : Codeunit 1299;
+      HttpWebResponse@1170170006 : DotNet "'System, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Net.HttpWebResponse";
+      RequestStr@1170170002 : DotNet "'mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.IO.Stream";
+      StreamWriter@1170170004 : DotNet "'mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.IO.StreamWriter";
+      Encoding@1170170005 : DotNet "'mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Text.Encoding";
+      InStrm@1170170008 : InStream;
+      InputText@1170170009 : Text;
+      SuggestColDefinitionJson@1170170011 : Codeunit 1238;
+      OutStrm@1170170013 : OutStream;
+      XMLBufferWriter@1170170015 : Codeunit 1235;
+      GetJsonStructure@1170170016 : Codeunit 1237;
+      XMLFile@1170170017 : File;
+    BEGIN
+      HttpWebRequest := HttpWebRequest.Create(NotificationUrl);
+      HttpWebRequest.Method := 'POST';
+      HttpWebRequest.ContentType('application/json');
+      RequestStr := HttpWebRequest.GetRequestStream;
+      StreamWriter := StreamWriter.StreamWriter(RequestStr,Encoding.ASCII);
+      StreamWriter.Write(JSONText);
+      StreamWriter.Flush;
+      StreamWriter.Close;
+      StreamWriter.Dispose;
+      HttpWebResponse := HttpWebRequest.GetResponse;
+      InStrm := HttpWebResponse.GetResponseStream;
+      XMLFile.CREATE(FilePath);
+      XMLFile.CREATEOUTSTREAM(OutStrm);
+      COPYSTREAM(OutStrm,InStrm);
+      HttpWebResponse.Close; // close connection
+      HttpWebResponse.Dispose; // cleanup of IDisposable
+    END;
+
+    PROCEDURE POSTHttpRequestToXMLFile@1170170013(NotificationUrl@1170170000 : Text;JSONText@1170170001 : Text;VAR XMLBuffer@1170170014 : TEMPORARY Record 1235;FilePath@1170170012 : Text);
+    VAR
+      TypeHelper@1170170003 : Codeunit 10;
+      HttpWebRequest@1170170010 : DotNet "'System, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Net.HttpWebRequest";
+      WebRequestHelper@1170170007 : Codeunit 1299;
+      HttpWebResponse@1170170006 : DotNet "'System, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Net.HttpWebResponse";
+      RequestStr@1170170002 : DotNet "'mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.IO.Stream";
+      StreamWriter@1170170004 : DotNet "'mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.IO.StreamWriter";
+      Encoding@1170170005 : DotNet "'mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Text.Encoding";
+      InStrm@1170170008 : InStream;
+      InputText@1170170009 : Text;
+      SuggestColDefinitionJson@1170170011 : Codeunit 1238;
+      OutStrm@1170170013 : OutStream;
+      XMLBufferWriter@1170170015 : Codeunit 1235;
+      GetJsonStructure@1170170016 : Codeunit 1237;
+      XMLFile@1170170017 : File;
+    BEGIN
+      HttpWebRequest := HttpWebRequest.Create(NotificationUrl);
+      HttpWebRequest.Method := 'POST';
+      HttpWebRequest.ContentType('application/json');
+      RequestStr := HttpWebRequest.GetRequestStream;
+      StreamWriter := StreamWriter.StreamWriter(RequestStr,Encoding.ASCII);
+      StreamWriter.Write(JSONText);
+      StreamWriter.Flush;
+      StreamWriter.Close;
+      StreamWriter.Dispose;
+      HttpWebResponse := HttpWebRequest.GetResponse;
+      InStrm := HttpWebResponse.GetResponseStream;
+      XMLFile.CREATE(FilePath);
+      XMLFile.CREATEOUTSTREAM(OutStrm);
+      IF NOT GetJsonStructure.JsonToXML(InStrm,OutStrm) THEN
+        IF NOT GetJsonStructure.JsonToXMLCreateDefaultRoot(InStrm,OutStrm) THEN
+          ERROR(InvalidResponseErr);
+      HttpWebResponse.Close; // close connection
+      HttpWebResponse.Dispose; // cleanup of IDisposable
+    END;
+
+    PROCEDURE POSTHttpRequestToXMLPort@1170170011(NotificationUrl@1170170000 : Text;JSONText@1170170001 : Text;VAR XMLBuffer@1170170014 : TEMPORARY Record 1235;FilePath@1170170012 : Text;XMLPortId@1170170020 : Integer);
+    VAR
+      TypeHelper@1170170003 : Codeunit 10;
+      HttpWebRequest@1170170010 : DotNet "'System, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Net.HttpWebRequest";
+      WebRequestHelper@1170170007 : Codeunit 1299;
+      HttpWebResponse@1170170006 : DotNet "'System, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Net.HttpWebResponse";
+      RequestStr@1170170002 : DotNet "'mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.IO.Stream";
+      StreamWriter@1170170004 : DotNet "'mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.IO.StreamWriter";
+      Encoding@1170170005 : DotNet "'mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Text.Encoding";
+      InStrm@1170170008 : InStream;
+      InputText@1170170009 : Text;
+      SuggestColDefinitionJson@1170170011 : Codeunit 1238;
+      OutStrm@1170170013 : OutStream;
+      XMLBufferWriter@1170170015 : Codeunit 1235;
+      GetJsonStructure@1170170016 : Codeunit 1237;
+      ImportXmlFile@1170170017 : File;
+      TestHttpRequest@1170170018 : XMLport 52300;
+      XmlInStream@1170170019 : InStream;
+    BEGIN
+      HttpWebRequest := HttpWebRequest.Create(NotificationUrl);
+      HttpWebRequest.Method := 'POST';
+      HttpWebRequest.ContentType('application/json');
+      RequestStr := HttpWebRequest.GetRequestStream;
+      StreamWriter := StreamWriter.StreamWriter(RequestStr,Encoding.ASCII);
+      StreamWriter.Write(JSONText);
+      StreamWriter.Flush;
+      StreamWriter.Close;
+      StreamWriter.Dispose;
+      HttpWebResponse := HttpWebRequest.GetResponse;
+      InStrm := HttpWebResponse.GetResponseStream;
+      ImportXmlFile.CREATE(FilePath);
+      ImportXmlFile.CREATEOUTSTREAM(OutStrm);
+      IF NOT GetJsonStructure.JsonToXML(InStrm,OutStrm) THEN
+        IF NOT GetJsonStructure.JsonToXMLCreateDefaultRoot(InStrm,OutStrm) THEN
+          ERROR(InvalidResponseErr);
+      HttpWebResponse.Close; // close connection
+      HttpWebResponse.Dispose; // cleanup of IDisposable
+      CLEAR(TestHttpRequest);
+      ImportXmlFile.CLOSE;
+
+      ImportXmlFile.OPEN(FilePath);
+      ImportXmlFile.CREATEINSTREAM(XmlInStream);
+      XMLPORT.IMPORT(XMLPortId,XmlInStream);
+      ImportXmlFile.CLOSE;
+    END;
+
+    BEGIN
+    END.
+  }
+}
+
+OBJECT XMLport 52300 Test Http Request
+{
+  OBJECT-PROPERTIES
+  {
+    Date=06/08/21;
+    Time=14:28:19;
+    Modified=Yes;
+    Version List=Test Http Request;
+  }
+  PROPERTIES
+  {
+    Direction=Import;
+  }
+  ELEMENTS
+  {
+    { [{F03FE028-AA20-4784-8428-3A95BE707E86}];  ;root                ;Element ;Text    ;
+                                                  MaxOccurs=Once }
+
+    { [{4CF224E1-5776-445B-A9DE-CEBB4DBBEC3F}];1 ;root                ;Element ;Text    ;
+                                                  VariableName=root2;
+                                                  Import::OnAfterAssignVariable=BEGIN
+                                                                                  root2 := root2;
+                                                                                END;
+                                                                                 }
+
+    { [{1B81C766-4C3C-4002-9AF7-8B214EF1AEA0}];2 ;coord               ;Element ;Text     }
+
+    { [{060AC125-6DDE-4BFA-B570-B29C48E7F203}];3 ;lon                 ;Element ;Text     }
+
+    { [{09FED5A9-FAD2-4048-8744-D38E50ECC073}];3 ;lat                 ;Element ;Text     }
+
+    { [{F588EE77-EA76-40BD-AEAE-7681ADE306B3}];2 ;weather             ;Element ;Text     }
+
+    { [{A36CE273-0905-4984-BEE6-200E43CAC521}];3 ;id                  ;Element ;Text    ;
+                                                  VariableName=WeatherId }
+
+    { [{FE454CBE-88F4-439A-B11B-F1BCA6B3CD16}];3 ;main                ;Element ;Text    ;
+                                                  VariableName=WeatherMain }
+
+    { [{11D9F26E-4E59-4EFC-9101-FA7E88978D06}];3 ;description         ;Element ;Text    ;
+                                                  VariableName=WeatherDescription }
+
+    { [{44838795-9F5A-43F1-9A28-8CE97DD843B1}];3 ;icon                ;Element ;Text    ;
+                                                  VariableName=WeatherIcon }
+
+    { [{C8CFB2B3-290B-4A2A-8DE8-25050F562191}];2 ;base                ;Element ;Text     }
+
+    { [{4A890721-4AF6-4870-8125-93378EC68EBA}];2 ;main                ;Element ;Text    ;
+                                                  VariableName=Roor2Main }
+
+    { [{15C84952-000F-4B7A-A435-575961166CAD}];3 ;temp                ;Element ;Text     }
+
+    { [{DCD55127-6CC4-4715-87E4-B7FEDD3D2BEF}];3 ;feels_like          ;Element ;Text     }
+
+    { [{4E5EB349-E7B6-401E-9C72-75B5307294B9}];3 ;temp_min            ;Element ;Text     }
+
+    { [{4AA0FD0B-FB6F-41FB-A85B-8332F270FC33}];3 ;temp_max            ;Element ;Text     }
+
+    { [{5F8D4769-B8FB-450E-AE5D-050AF9665A05}];3 ;pressure            ;Element ;Text     }
+
+    { [{BD2DE3F0-6EB8-41EC-AD44-D20616EBEEC0}];3 ;humidity            ;Element ;Text     }
+
+    { [{8CB1C68F-ED88-4286-AAD7-C02F4DADB1B3}];2 ;visibility          ;Element ;Text     }
+
+    { [{8303ACC5-77E4-46D5-9DCE-3EE46BA3811F}];2 ;wind                ;Element ;Text     }
+
+    { [{0F4D6734-02B5-414B-BAB6-64ECA30D0480}];3 ;speed               ;Element ;Text     }
+
+    { [{236650E4-2693-4FC4-A2B6-B5720454A8C2}];3 ;deg                 ;Element ;Text     }
+
+    { [{F477A8B6-56F0-419A-9315-429FA612E128}];2 ;clouds              ;Element ;Text     }
+
+    { [{B10105FC-4295-480E-965B-50B90EB6C4BD}];3 ;all                 ;Element ;Text     }
+
+    { [{95C6223B-A78B-4BBF-B436-720AFE5EC0D8}];2 ;dt                  ;Element ;Text     }
+
+    { [{3FEAB365-8548-48D0-BD94-FC34D43D0429}];2 ;sys                 ;Element ;Text     }
+
+    { [{8CB10BB9-C813-4902-8225-BB3A6037AD75}];3 ;type                ;Element ;Text     }
+
+    { [{F5C90D7C-752A-4542-9A0A-EE0578350827}];3 ;id                  ;Element ;Text    ;
+                                                  VariableName=SysId }
+
+    { [{5997F7D2-56F7-4BDD-B290-6D7ADB684707}];3 ;country             ;Element ;Text     }
+
+    { [{B986A4D1-F3FE-4AE5-AF06-EBCB6678B5B7}];3 ;sunrise             ;Element ;Text     }
+
+    { [{89C1075E-4483-4B70-B11F-334028C32B7A}];3 ;sunset              ;Element ;Text     }
+
+    { [{F453E7D4-262A-4168-974F-3B622AA3BA5B}];2 ;timezone            ;Element ;Text     }
+
+    { [{2A2FC36A-1F44-4365-9D61-1BCCE63AC169}];2 ;id                  ;Element ;Text    ;
+                                                  VariableName=RootId }
+
+    { [{6322E4B2-976D-4783-B192-7EFD7BBE0654}];2 ;name                ;Element ;Text     }
+
+    { [{A953DA59-763E-40BD-9C7C-554EC3DF03BF}];2 ;cod                 ;Element ;Text     }
+
+  }
+  EVENTS
+  {
+  }
+  REQUESTPAGE
+  {
+    PROPERTIES
+    {
+    }
+    CONTROLS
+    {
+    }
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+
+OBJECT XMLport 52301 Test Http Request To Table
+{
+  OBJECT-PROPERTIES
+  {
+    Date=06/08/21;
+    Time=13:52:03;
+    Modified=Yes;
+    Version List=Test Http Request;
+  }
+  PROPERTIES
+  {
+    Direction=Import;
+  }
+  ELEMENTS
+  {
+    { [{F03FE028-AA20-4784-8428-3A95BE707E86}];  ;root                ;Element ;Text    ;
+                                                  MaxOccurs=Once }
+
+    { [{4CF224E1-5776-445B-A9DE-CEBB4DBBEC3F}];1 ;root2               ;Element ;Text    ;
+                                                  VariableName=root2;
+                                                  Import::OnAfterAssignVariable=BEGIN
+                                                                                  root2 := root2;
+                                                                                END;
+                                                                                 }
+
+    { [{1B81C766-4C3C-4002-9AF7-8B214EF1AEA0}];2 ;coord               ;Element ;Text     }
+
+    { [{060AC125-6DDE-4BFA-B570-B29C48E7F203}];3 ;lon                 ;Element ;Text     }
+
+    { [{09FED5A9-FAD2-4048-8744-D38E50ECC073}];3 ;lat                 ;Element ;Text     }
+
+    { [{F588EE77-EA76-40BD-AEAE-7681ADE306B3}];2 ;weather             ;Element ;Text     }
+
+    { [{A36CE273-0905-4984-BEE6-200E43CAC521}];3 ;id                  ;Element ;Text    ;
+                                                  VariableName=WeatherId }
+
+    { [{FE454CBE-88F4-439A-B11B-F1BCA6B3CD16}];3 ;main                ;Element ;Text    ;
+                                                  VariableName=WeatherMain }
+
+    { [{11D9F26E-4E59-4EFC-9101-FA7E88978D06}];3 ;description         ;Element ;Text    ;
+                                                  VariableName=WeatherDescription }
+
+    { [{44838795-9F5A-43F1-9A28-8CE97DD843B1}];3 ;icon                ;Element ;Text    ;
+                                                  VariableName=WeatherIcon }
+
+    { [{C8CFB2B3-290B-4A2A-8DE8-25050F562191}];2 ;base                ;Element ;Text     }
+
+    { [{4A890721-4AF6-4870-8125-93378EC68EBA}];2 ;main                ;Element ;Text    ;
+                                                  VariableName=Roor2Main }
+
+    { [{15C84952-000F-4B7A-A435-575961166CAD}];3 ;temp                ;Element ;Text     }
+
+    { [{DCD55127-6CC4-4715-87E4-B7FEDD3D2BEF}];3 ;feels_like          ;Element ;Text     }
+
+    { [{4E5EB349-E7B6-401E-9C72-75B5307294B9}];3 ;temp_min            ;Element ;Text     }
+
+    { [{4AA0FD0B-FB6F-41FB-A85B-8332F270FC33}];3 ;temp_max            ;Element ;Text     }
+
+    { [{5F8D4769-B8FB-450E-AE5D-050AF9665A05}];3 ;pressure            ;Element ;Text     }
+
+    { [{BD2DE3F0-6EB8-41EC-AD44-D20616EBEEC0}];3 ;humidity            ;Element ;Text     }
+
+    { [{8CB1C68F-ED88-4286-AAD7-C02F4DADB1B3}];2 ;visibility          ;Element ;Text     }
+
+    { [{8303ACC5-77E4-46D5-9DCE-3EE46BA3811F}];2 ;wind                ;Element ;Text     }
+
+    { [{0F4D6734-02B5-414B-BAB6-64ECA30D0480}];3 ;speed               ;Element ;Text     }
+
+    { [{236650E4-2693-4FC4-A2B6-B5720454A8C2}];3 ;deg                 ;Element ;Text     }
+
+    { [{F477A8B6-56F0-419A-9315-429FA612E128}];2 ;clouds              ;Element ;Text     }
+
+    { [{B10105FC-4295-480E-965B-50B90EB6C4BD}];3 ;all                 ;Element ;Text     }
+
+    { [{95C6223B-A78B-4BBF-B436-720AFE5EC0D8}];2 ;dt                  ;Element ;Text     }
+
+    { [{3FEAB365-8548-48D0-BD94-FC34D43D0429}];2 ;sys                 ;Element ;Text     }
+
+    { [{8CB10BB9-C813-4902-8225-BB3A6037AD75}];3 ;type                ;Element ;Text     }
+
+    { [{F5C90D7C-752A-4542-9A0A-EE0578350827}];3 ;id                  ;Element ;Text    ;
+                                                  VariableName=SysId }
+
+    { [{5997F7D2-56F7-4BDD-B290-6D7ADB684707}];3 ;country             ;Element ;Text     }
+
+    { [{B986A4D1-F3FE-4AE5-AF06-EBCB6678B5B7}];3 ;sunrise             ;Element ;Text     }
+
+    { [{89C1075E-4483-4B70-B11F-334028C32B7A}];3 ;sunset              ;Element ;Text     }
+
+    { [{F453E7D4-262A-4168-974F-3B622AA3BA5B}];2 ;timezone            ;Element ;Text     }
+
+    { [{2A2FC36A-1F44-4365-9D61-1BCCE63AC169}];2 ;id                  ;Element ;Text    ;
+                                                  VariableName=RootId }
+
+    { [{6322E4B2-976D-4783-B192-7EFD7BBE0654}];2 ;name                ;Element ;Text     }
+
+    { [{A953DA59-763E-40BD-9C7C-554EC3DF03BF}];2 ;cod                 ;Element ;Text     }
+
+  }
+  EVENTS
+  {
+  }
+  REQUESTPAGE
+  {
+    PROPERTIES
+    {
+    }
+    CONTROLS
+    {
+    }
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+
+OBJECT Page 52300 Test Http Web Request
+{
+  OBJECT-PROPERTIES
+  {
+    Date=09/08/21;
+    Time=[ 8:21:52];
+    Modified=Yes;
+    Version List=Test Http Request;
+  }
+  PROPERTIES
+  {
+    SourceTable=Table1235;
+    PageType=List;
+    SourceTableTemporary=Yes;
+    OnOpenPage=BEGIN
+                 RequestURL := 'http://api.openweathermap.org/data/2.5/weather?q=london&appid=c91a570d30374d6cd6563d775f6f0438';
+               END;
+
+    ActionList=ACTIONS
+    {
+      { 1170170014;  ;ActionContainer;
+                      ActionContainerType=ActionItems }
+      { 1170170024;1 ;ActionGroup;
+                      Name=GET;
+                      CaptionML=[ENU=GET;
+                                 ESP=POST] }
+      { 1170170023;2 ;Action    ;
+                      Name=GETToMessageText;
+                      CaptionML=[ENU=To Message Text;
+                                 ESP=To Message Text];
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      PromotedCategory=Process;
+                      OnAction=BEGIN
+                                 TestHttpRequestMgt.GETHttpRequest(RequestURL,'');
+                               END;
+                                }
+      { 1170170022;1 ;ActionGroup;
+                      Name=POST;
+                      CaptionML=[ENU=POST;
+                                 ESP=POST] }
+      { 1170170016;2 ;Action    ;
+                      Name=ToMessageText;
+                      CaptionML=[ENU=To Message Text;
+                                 ESP=To Message Text];
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      PromotedCategory=Process;
+                      OnAction=BEGIN
+                                 TestHttpRequestMgt.POSTHttpRequest(RequestURL,'');
+                               END;
+                                }
+      { 1170170017;2 ;Action    ;
+                      Name=ToXMLBuffer;
+                      CaptionML=[ENU=To XMLBuffer;
+                                 ESP=To XMLBuffer];
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      PromotedCategory=Process;
+                      OnAction=BEGIN
+                                 TestHttpRequestMgt.POSTHttpRequestToXMLBuffer(RequestURL,'',Rec);
+                               END;
+                                }
+      { 1170170021;2 ;Action    ;
+                      Name=ToJSONFile;
+                      CaptionML=[ENU=To JSON File;
+                                 ESP=To JSON File];
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      PromotedCategory=Process;
+                      OnAction=BEGIN
+                                 TestHttpRequestMgt.POSTHttpRequestToJSONFile(RequestURL,'',Rec,'\\am\Compartida\XMLFile.JSON');
+                               END;
+                                }
+      { 1170170015;2 ;Action    ;
+                      Name=ToXMLFile;
+                      CaptionML=[ENU=To XML File;
+                                 ESP=To XML File];
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      PromotedCategory=Process;
+                      OnAction=BEGIN
+                                 TestHttpRequestMgt.POSTHttpRequestToXMLFile(RequestURL,'',Rec,'\\am\Compartida\XMLFile.xml');
+                               END;
+                                }
+      { 1170170018;2 ;Action    ;
+                      Name=ToXMLPort;
+                      CaptionML=[ENU=To XML Port;
+                                 ESP=To XML Port];
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      PromotedCategory=Process;
+                      OnAction=BEGIN
+                                 TestHttpRequestMgt.POSTHttpRequestToXMLPort(RequestURL,'',Rec,'\\am\Compartida\XMLFile.xml',XMLPORT::"Test Http Request");
+                               END;
+                                }
+      { 1170170019;2 ;Action    ;
+                      Name=ToTable;
+                      CaptionML=[ENU=To Table;
+                                 ESP=To Table];
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      PromotedCategory=Process }
+    }
+  }
+  CONTROLS
+  {
+    { 1170170000;0;Container;
+                ContainerType=ContentArea }
+
+    { 1170170020;1;Group  ;
+                Name=URL;
+                CaptionML=[ENU=URL;
+                           ESP=URL];
+                GroupType=Group }
+
+    { 1170170013;2;Field  ;
+                Name=Request URL;
+                CaptionML=[ENU=Request URL;
+                           ESP=Request URL];
+                SourceExpr=RequestURL }
+
+    { 1170170001;1;Group  ;
+                Name=Group;
+                GroupType=Repeater }
+
+    { 1170170002;2;Field  ;
+                SourceExpr="Entry No." }
+
+    { 1170170003;2;Field  ;
+                SourceExpr=Type }
+
+    { 1170170004;2;Field  ;
+                SourceExpr=Name }
+
+    { 1170170005;2;Field  ;
+                SourceExpr=Path }
+
+    { 1170170006;2;Field  ;
+                SourceExpr=Value }
+
+    { 1170170007;2;Field  ;
+                SourceExpr=Depth }
+
+    { 1170170008;2;Field  ;
+                SourceExpr="Parent Entry No." }
+
+    { 1170170009;2;Field  ;
+                SourceExpr="Data Type" }
+
+    { 1170170010;2;Field  ;
+                SourceExpr="Node Number" }
+
+    { 1170170011;2;Field  ;
+                SourceExpr=Namespace }
+
+    { 1170170012;2;Field  ;
+                SourceExpr="Import ID" }
+
+  }
+  CODE
+  {
+    VAR
+      SuggestColDefinitionJson@1170170000 : Codeunit 1238;
+      TestHttpRequestMgt@1170170001 : Codeunit 52300;
+      RequestURL@1170170002 : Text;
+
+    BEGIN
+    {
+      // Ejemplo: PostHttpRequest('http://api.openweathermap.org/data/2.5/weather?q=london&appid=c91a570d30374d6cd6563d775f6f0438','');
+    }
+    END.
+  }
+}
+

@@ -1,0 +1,17 @@
+La llamada es así:
+
+WITH LlamadaWSExterno DO BEGIN
+  ParametrosXML := NAVBCAñadirParametroNuevo(ParametrosXML,NombreParametro,Parametro);
+  NAVBCLlamarWS(URL,XMLResponse,UserName,Pass,Method,ParametrosXML);
+END;
+MESSAGE('%1',XMLResponse.OuterXml);
+
+Notas:
+
+- LlamadaWSExterno, es una instancia de la Codeunit Llamada WS externo.
+- XMLResponse, un objeto System.Xml.XmlDocument.'System.Xml, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.
+- ParametrosXML, un Texto de longitud ilimitada.
+- Se pueden llenar con todos los parámetros que se quiera, llamando como viene arriba a la función, NAVBCAñadirParametroNuevo.
+- También se puede pasar un XML de texto con el resultado de un XML portre como parámetro.
+- En caso de no indicar usuario generará una conexión Windows por defecto al servicio web
+- El resultado de la llamada, por si se tiene que utilizar, queda en XMLResponse, y su texto se puede sacar con la proiedad OuterXML.

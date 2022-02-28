@@ -1,0 +1,10 @@
+CWS Conexión web Service
+=========================================
+Patrón de desarrollo para consumir Web Service desde NAV.
+El patrón se compone de 
+- La tabla de configuración en la que configurar la URL del servicio web.
+- Codeunit 71000 Gestión conexión servicios web en la que están las dos funciones globales a las que podemos llamar.
+
+Las dos funciones globales a las que podemos llamar son:
+- InvocarWebService: Que nos sirve para invocar a cualquier servicio web que no sea un servicio web NAV.
+- InvocarWebServiceNAV: Que nos sirve para invocar a cualquier servicio web publicado por otro (o por el mismo) servicio NAV.
