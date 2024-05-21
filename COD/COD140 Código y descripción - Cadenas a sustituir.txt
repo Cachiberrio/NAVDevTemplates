@@ -1,6 +1,7 @@
 COD140 Cadenas a sustituir
 =================================
 <TableName>
+<TableNamePlural>
 <NombreTabla>
 <NombreTablaPlural>
 
